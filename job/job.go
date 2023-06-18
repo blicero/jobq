@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-18 20:35:30 krylon>
+// Time-stamp: <2023-06-18 21:51:53 krylon>
 
 // Package job provides the Job type.
 package job
@@ -59,9 +59,13 @@ func (je *Error) Error() string {
 //
 // ErrJobStarted indicates that a Job could not be started because it had started already.
 //
+// ErrJobNotStarted indicates that an operation failed because the Job has
+// not been started yet.
+//
 // ErrInvalidOption indicates that the Options used for the Job contain an invalid value.
 var (
 	ErrJobStarted    = errors.New("Job has been started already")
+	ErrJobNotStarted = errors.New("Job has not been started")
 	ErrInvalidOption = errors.New("Invalid Option")
 )
 
@@ -175,5 +179,28 @@ func (j *Job) Start(outpath, errpath string) error {
 			err)
 	}
 
+	j.TimeStarted = time.Now()
+
 	return nil
 } // func (j *Job) Start() error
+
+// Wait waits for a started Job to finish and does the post-processing.
+func (j *Job) Wait() error {
+	var (
+		err error
+	)
+
+	if j.proc == nil || j.proc.Process == nil {
+		return ErrJobNotStarted
+	} else if err = j.proc.Wait(); err != nil {
+		// do something.
+		fmt.Fprintf(
+			os.Stderr,
+			"Error running Job %d (%s): %s\n",
+			j.ID,
+			j.Cmd[0],
+			err.Error())
+	}
+
+	return err
+} // func (j *Job) Wait() error
