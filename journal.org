@@ -1,5 +1,6 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-06-17 18:44:04 krylon>
+# Time-stamp: <2023-06-18 16:14:58 krylon>
+#
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
 #+TODO: TODO(t) IMPLEMENT(i) TEST(e) RESEARCH(r) | DONE(d)
@@ -13,21 +14,81 @@
   features I hope to implement along the way.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-06-17 Sa 15:30]
+   #+CAPTION: Clock summary at [2023-06-18 So 16:14]
+   | Headline                 | Time   |      |      |      |
+   |--------------------------+--------+------+------+------|
+   | *Total time*             | *0:29* |      |      |      |
+   |--------------------------+--------+------+------+------|
+   | jobq                     | 0:29   |      |      |      |
+   | \_  Features [0/5]       |        | 0:29 |      |      |
+   | \_    Enqueue jobs [0/1] |        |      | 0:09 |      |
+   | \_      Scheduling       |        |      |      | 0:09 |
    #+END:
-** Features [0/0]
+** Features [0/5]                                                   :feature:
    :PROPERTIES:
    :COOKIE_DATA: todo recursive
    :VISIBILITY: children
    :END:
-** Planning [0/0]
+   :LOGBOOK:
+   CLOCK: [2023-06-18 So 15:40]--[2023-06-18 So 16:00] =>  0:20
+   :END:
+*** TODO Enqueue jobs [0/1]
+    Obviously. When submitted, a job is not executed right away, but added to
+    a queue. When ready, the job scheduler/monitor will remove the first one
+    from the queue and run it. And then the next one.
+**** RESEARCH Scheduling
+     :LOGBOOK:
+     CLOCK: [2023-06-18 So 16:05]--[2023-06-18 So 16:14] =>  0:09
+     :END:
+     Would be nice if I could also submit a job and define it should be
+     started at a given time.
+     Also, I would like to be able to restrict how long a job runs and
+     terminate it if it exceeds its time.
+     Also, it would be extra nice, if I could state a job should be run not at
+     a given time, but in a given time window, e.g. between 20:00 and
+     08:00. The scheduler then should juggle the various jobs it should run so
+     they all meet their time window.
+
+     [2023-06-18 So 16:06]
+     I consulted awesome-go and found a number of job scheduling
+     libraries. Most seem to be aimed at cron-like scenarios, but some are
+     more flexible/general. I'll look into those.
+     Even if I end up not using any of these, I can take some ideas, maybe
+     learn a few tricks.
+***** quartz https://github.com/reugn/go-quartz
+***** cdule https://github.com/deepaksinghvi/cdule
+      Uses a database for persistence (optinally sqlite in-memory), which
+      sounds nice.
+***** tasks https://github.com/madflojo/tasks
+      Sounds more like a cron-like scheduler, but I'll put it on my list.
+*** TODO Spool output
+    Like ts, my main inspiration, I want to capture the output of running jobs
+    and save it to files.
+    I also want to, optionally at least, compress the output.
+*** TODO Parallel
+    I want to be able to - optionally - run multiple jobs in parallel.
+*** TODO Multiple queues
+    I want to be able to support multiple different queues simultaneously,
+    e.g. one queue for downloading files, one for compressing videos, and so
+    forth.
+** Planning [0/0]                                              :architecture:
    :PROPERTIES:
    :COOKIE_DATA: todo recursive
    :VISIBILITY: children
    :END:
-** Components [0/0]
+** Components [0/1]
    :PROPERTIES:
    :COOKIE_DATA: todo recursive
    :VISIBILITY: children
    :END:
+*** Data types [0/2]
+    :PROPERTIES:
+    :COOKIE_DATA: todo recursive
+    :VISIBILITY: children
+    :END:
+**** TODO Job
+     Clearly, I should start here. What properties of a Job do I need. Also,
+     how do I run a job, handle output and so forth.
+**** TODO Queue
+     Well, duh.
 ** Bugs
