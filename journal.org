@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-06-18 20:37:12 krylon>
+# Time-stamp: <2023-06-18 22:59:42 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -27,7 +27,7 @@
    | \_    Data types [0/2]   |        |      | 4:08 |      |
    | \_      Job              |        |      |      | 4:08 |
    #+END:
-** Features [0/5]                                                   :feature:
+** Features [0/6]                                                   :feature:
    :PROPERTIES:
    :COOKIE_DATA: todo recursive
    :VISIBILITY: children
@@ -35,7 +35,7 @@
    :LOGBOOK:
    CLOCK: [2023-06-18 So 15:40]--[2023-06-18 So 16:00] =>  0:20
    :END:
-*** TODO Enqueue jobs [0/1]
+*** TODO Enqueue jobs [0/2]
     Obviously. When submitted, a job is not executed right away, but added to
     a queue. When ready, the job scheduler/monitor will remove the first one
     from the queue and run it. And then the next one.
@@ -64,6 +64,10 @@
       sounds nice.
 ***** tasks https://github.com/madflojo/tasks
       Sounds more like a cron-like scheduler, but I'll put it on my list.
+**** MEDITATE [#F] Pipelines
+     It would be kind of nice if I could support something equivalent to shell
+     pipelines. /Possibly/ even something more complex, like having a sequence
+     of commands running as a job instead of a single command.
 *** TODO Spool output
     Like ts, my main inspiration, I want to capture the output of running jobs
     and save it to files.
@@ -103,10 +107,15 @@
     :END:
 **** TODO Job
      :LOGBOOK:
+     CLOCK: [2023-06-18 So 21:35]
      CLOCK: [2023-06-18 So 16:29]--[2023-06-18 So 20:37] =>  4:08
      :END:
      Clearly, I should start here. What properties of a Job do I need. Also,
      how do I run a job, handle output and so forth.
+
+     It would be nice if I could support pipelines, like a shell script. I
+     could go cheap and just make it a shell script and then run the shell,
+     but ... it doesn't feel right, does it?
 **** TODO Queue
      Well, duh.
 ** Bugs
