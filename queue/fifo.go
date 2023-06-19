@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 19. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-19 17:54:23 krylon>
+// Time-stamp: <2023-06-19 20:20:46 krylon>
 
 package queue
 
@@ -23,11 +23,16 @@ type fifoLink struct {
 // The size of the fifo is not restricted. It is synchronized, so access
 // by multiple goroutines is safe.
 type fifo struct {
-	head *fifoLink
-	tail *fifoLink
-	cnt  int
-	lock sync.RWMutex
+	head     *fifoLink
+	tail     *fifoLink
+	cnt      int
+	lock     sync.RWMutex
+	notempty *sync.Cond
 }
+
+func fifoInit(f *fifo) {
+	f.notempty = sync.NewCond(&f.lock)
+} // func fifoInit(f *fifo)
 
 func (q *fifo) length() int {
 	q.lock.RLock()
@@ -40,8 +45,9 @@ func (q *fifo) enqueue(j *job.Job) {
 	q.lock.Lock()
 
 	q.tail = &fifoLink{job: j, next: q.tail}
-	if q.head == nil {
+	if q.head == nil { // i.e. fifo is empty
 		q.head = q.tail
+		q.notempty.Signal()
 	}
 
 	q.cnt++
@@ -50,7 +56,7 @@ func (q *fifo) enqueue(j *job.Job) {
 } // func (q *queue) enqueue(j *job.Job)
 
 // nolint: unused
-func (q *fifo) dequeue() *job.Job {
+func (q *fifo) dequeueNB() *job.Job {
 	q.lock.Lock()
 	defer q.lock.Unlock()
 
@@ -63,4 +69,20 @@ func (q *fifo) dequeue() *job.Job {
 	q.cnt--
 
 	return j
-} // func (q *queue) dequeue() *job.Job
+} // func (q *queue) dequeueNB() *job.Job
+
+// nolint: unused
+func (q *fifo) dequeue() *job.Job {
+	q.lock.Lock()
+	defer q.lock.Unlock()
+
+	if q.cnt == 0 {
+		q.notempty.Wait()
+	}
+
+	var j = q.head.job
+	q.head = q.head.next
+	q.cnt--
+
+	return j
+} // func (q *fifo) dequeue() *job.Job
