@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-06-19 18:03:24 krylon>
+# Time-stamp: <2023-06-19 20:29:12 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -12,22 +12,29 @@
   jobq is a spooler and queue for batch jobs.
   I will try to keep it simple at first, but I have some ideas for nifty
   features I hope to implement along the way.
+
+  JOBQ IS A VERY UNCREATIVE NAME. I WOULD REALLY LIKE SOMETHING BETTER, BUT I
+  NEEDED A NAME TO GET STARTED. I HOPE I'LL FIND A BETTER NAME EVENTUALLY.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-06-19 Mo 18:03]
+   #+CAPTION: Clock summary at [2023-06-19 Mo 20:29]
    | Headline                 | Time   |      |      |      |
    |--------------------------+--------+------+------+------|
-   | *Total time*             | *8:07* |      |      |      |
+   | *Total time*             | *9:35* |      |      |      |
    |--------------------------+--------+------+------+------|
-   | jobq                     | 8:07   |      |      |      |
+   | jobq                     | 9:35   |      |      |      |
    | \_  Features [0/6]       |        | 0:29 |      |      |
    | \_    Enqueue jobs [0/2] |        |      | 0:09 |      |
    | \_      Scheduling       |        |      |      | 0:09 |
-   | \_  Components [0/1]     |        | 7:38 |      |      |
-   | \_    Data types [0/2]   |        |      | 7:38 |      |
+   | \_  Components [0/1]     |        | 9:06 |      |      |
+   | \_    Data types [0/2]   |        |      | 9:06 |      |
    | \_      Job              |        |      |      | 5:13 |
-   | \_      Queue            |        |      |      | 2:25 |
+   | \_      Queue            |        |      |      | 3:53 |
    #+END:
+** Journal
+   Here I write mainly chronologically.
+*** [2023-06-19 Mo 20:28]
+    I should write some tests for the queueing stuff before I move on.
 ** Features [0/6]                                                   :feature:
    :PROPERTIES:
    :COOKIE_DATA: todo recursive
@@ -59,6 +66,9 @@
      more flexible/general. I'll look into those.
      Even if I end up not using any of these, I can take some ideas, maybe
      learn a few tricks.
+
+     In the very long run, adding cron-like functionality for recurring jobs
+     seems desirable as well.
 ***** quartz https://github.com/reugn/go-quartz
 ***** cdule https://github.com/deepaksinghvi/cdule
       Uses a database for persistence (optinally sqlite in-memory), which
@@ -91,6 +101,22 @@
     I want to be able to support multiple different queues simultaneously,
     e.g. one queue for downloading files, one for compressing videos, and so
     forth.
+*** Moonshot ideas
+    Some goals are more of the speculative, wishful thinking kind. I have no
+    immediate intention of implementing these. But maybe, some day the program
+    works to my satisfaction, and I find myself with enough time and nothing
+    better to do. A guy can dream, can't he?
+    - Web interface
+    - Networking
+      At that point we'd be be leaving the "simple job queue/scheduler"
+      territory and entering cluster manager land. It would be interesting to
+      do.
+      But it would also be interesting - and more realistic - to monitor job
+      queues on multiple machines. If I have a dedicated queue for
+      e.g. downloading files, I might /move/ that queue around, have it "live"
+      on my desktop computer in the daytime, then move it to my home server at
+      night. That would be very difficult to get right, but it sounds
+      alluring, doesn't it?
 ** Planning [0/0]                                              :architecture:
    :PROPERTIES:
    :COOKIE_DATA: todo recursive
@@ -124,9 +150,15 @@
      but ... it doesn't feel right, does it?
 **** TODO Queue
      :LOGBOOK:
+     CLOCK: [2023-06-19 Mo 19:01]--[2023-06-19 Mo 20:29] =>  1:28
      CLOCK: [2023-06-19 Mo 17:38]--[2023-06-19 Mo 18:03] =>  0:25
      CLOCK: [2023-06-19 Mo 12:43]--[2023-06-19 Mo 14:43] =>  2:00
      :END:
      I should start thinking about persistence. That would be nice,
      actually. Keep a history, and survive crashes more gracefully.
+
+     I split the functionality, the actual, CS textbook queue is _queue.fifo_,
+     the /Job/ Queue the rest of the program interfaces with uses that data
+     structure but adds some functionality. It's unfortunate, perhaps, that
+     both the basic data structure and the Job monitor are called "queue". 
 ** Bugs
