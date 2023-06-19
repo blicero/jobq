@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-18 21:51:53 krylon>
+// Time-stamp: <2023-06-19 20:18:34 krylon>
 
 // Package job provides the Job type.
 package job
@@ -193,7 +193,7 @@ func (j *Job) Wait() error {
 	if j.proc == nil || j.proc.Process == nil {
 		return ErrJobNotStarted
 	} else if err = j.proc.Wait(); err != nil {
-		// do something.
+		// Deal with it! FIXME
 		fmt.Fprintf(
 			os.Stderr,
 			"Error running Job %d (%s): %s\n",
@@ -201,6 +201,8 @@ func (j *Job) Wait() error {
 			j.Cmd[0],
 			err.Error())
 	}
+
+	j.TimeEnded = time.Now()
 
 	return err
 } // func (j *Job) Wait() error
