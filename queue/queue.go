@@ -37,3 +37,25 @@ func New() (*Queue, error) {
 
 	return q, nil
 } // func New() (*Queue, error)
+
+// Length returns the number of pending jobs.
+func (q *Queue) Length() int {
+	return q.q.length()
+} // func (q *Queue) Length() int
+
+// Submit adds a new Job to the Queue.
+func (q *Queue) Submit(j *job.Job) error {
+	j.TimeSubmitted = time.Now()
+
+	q.q.enqueue(j)
+
+	return nil
+} // func (q *Queue) Submit(j *job.Job) error
+
+// "private"
+
+func (q *Queue) loop() {
+	q.active.Store(true)
+	defer q.active.Store(false)
+
+} // func (q *Queue) loop()
