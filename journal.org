@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-06-19 14:47:41 krylon>
+# Time-stamp: <2023-06-19 18:03:24 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -14,19 +14,19 @@
   features I hope to implement along the way.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-06-19 Mo 14:47]
+   #+CAPTION: Clock summary at [2023-06-19 Mo 18:03]
    | Headline                 | Time   |      |      |      |
    |--------------------------+--------+------+------+------|
-   | *Total time*             | *7:42* |      |      |      |
+   | *Total time*             | *8:07* |      |      |      |
    |--------------------------+--------+------+------+------|
-   | jobq                     | 7:42   |      |      |      |
+   | jobq                     | 8:07   |      |      |      |
    | \_  Features [0/6]       |        | 0:29 |      |      |
    | \_    Enqueue jobs [0/2] |        |      | 0:09 |      |
    | \_      Scheduling       |        |      |      | 0:09 |
-   | \_  Components [0/1]     |        | 7:13 |      |      |
-   | \_    Data types [0/2]   |        |      | 7:13 |      |
+   | \_  Components [0/1]     |        | 7:38 |      |      |
+   | \_    Data types [0/2]   |        |      | 7:38 |      |
    | \_      Job              |        |      |      | 5:13 |
-   | \_      Queue            |        |      |      | 2:00 |
+   | \_      Queue            |        |      |      | 2:25 |
    #+END:
 ** Features [0/6]                                                   :feature:
    :PROPERTIES:
@@ -96,6 +96,11 @@
    :COOKIE_DATA: todo recursive
    :VISIBILITY: children
    :END:
+   [2023-06-19 Mo 17:31]
+   My short-term plan is as follows:
+   First, I want to get to the point where I can just add jobs and run them.
+   My next step would be to add persistence to the queue.
+   After that, I would like to round the existing features up by a nice CLI.
 ** Components [0/1]
    :PROPERTIES:
    :COOKIE_DATA: todo recursive
@@ -119,6 +124,7 @@
      but ... it doesn't feel right, does it?
 **** TODO Queue
      :LOGBOOK:
+     CLOCK: [2023-06-19 Mo 17:38]--[2023-06-19 Mo 18:03] =>  0:25
      CLOCK: [2023-06-19 Mo 12:43]--[2023-06-19 Mo 14:43] =>  2:00
      :END:
      I should start thinking about persistence. That would be nice,
