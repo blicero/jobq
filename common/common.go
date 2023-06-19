@@ -2,7 +2,7 @@
 // -*- coding: utf-8; mode: go; -*-
 // Created on 23. 12. 2015 by Benjamin Walkenhorst
 // (c) 2015 Benjamin Walkenhorst
-// Time-stamp: <2023-06-17 18:56:11 krylon>
+// Time-stamp: <2023-06-19 17:57:21 krylon>
 
 // Package common provides constants, variables and functions used
 // throughout the application.
@@ -85,10 +85,11 @@ var SuffixPattern = regexp.MustCompile("([.][^.]+)$")
 // DbPath is the path of the main database.
 // WebPort is the TCP port the server listens on.
 var (
-	BaseDir       = filepath.Join(os.Getenv("HOME"), AppName+".d")
-	LogPath       = filepath.Join(BaseDir, AppName+".log")
-	DbPath        = filepath.Join(BaseDir, AppName+".db")
-	WebPort int64 = 1337
+	BaseDir        = filepath.Join(os.Getenv("HOME"), AppName+".d")
+	LogPath        = filepath.Join(BaseDir, AppName+".log")
+	DbPath         = filepath.Join(BaseDir, AppName+".db")
+	SpoolDir       = filepath.Join(BaseDir, "spool")
+	WebPort  int64 = 1337
 )
 
 // SetBaseDir sets the BaseDir and related variables.
@@ -98,6 +99,7 @@ func SetBaseDir(path string) error {
 	BaseDir = path
 	LogPath = filepath.Join(BaseDir, AppName+".log")
 	DbPath = filepath.Join(BaseDir, AppName+".db")
+	SpoolDir = filepath.Join(BaseDir, "spool")
 
 	if err := InitApp(); err != nil {
 		fmt.Printf("Error initializing application environment: %s\n", err.Error())
@@ -163,12 +165,12 @@ func InitApp() error {
 		}
 	}
 
-	// if err = os.Mkdir(BufferPath, 0755); err != nil {
-	// 	if !os.IsExist(err) {
-	// 		msg := fmt.Sprintf("Error creating BufferPath %s: %s", BufferPath, err.Error())
-	// 		return errors.New(msg)
-	// 	}
-	// }
+	if err = os.Mkdir(SpoolDir, 0755); err != nil {
+		if !os.IsExist(err) {
+			msg := fmt.Sprintf("Error creating BufferPath %s: %s", SpoolDir, err.Error())
+			return errors.New(msg)
+		}
+	}
 
 	return nil
 } // func InitApp() error
