@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 02. 2021 by Benjamin Walkenhorst
 // (c) 2021 Benjamin Walkenhorst
-// Time-stamp: <2023-06-18 23:44:37 krylon>
+// Time-stamp: <2023-06-19 14:38:46 krylon>
 
 //go:build ignore
 // +build ignore
@@ -70,11 +70,13 @@ var candidates = map[string][]string{
 		"common",
 		"logdomain",
 		"job",
+		"queue",
 	},
 	"lint": {
 		"common",
 		"logdomain",
 		"job",
+		"queue",
 	},
 }
 
