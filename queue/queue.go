@@ -2,13 +2,15 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 19. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-19 18:00:53 krylon>
+// Time-stamp: <2023-06-19 20:22:18 krylon>
 
 // Package queue implements the queueing of jobs.
 package queue
 
 import (
+	"fmt"
 	"log"
+	"path/filepath"
 	"sync/atomic"
 	"time"
 
@@ -31,6 +33,8 @@ func New() (*Queue, error) {
 		q   = new(Queue)
 	)
 
+	fifoInit(&q.q)
+
 	if q.log, err = common.GetLogger(logdomain.Queue); err != nil {
 		return nil, err
 	}
@@ -52,10 +56,47 @@ func (q *Queue) Submit(j *job.Job) error {
 	return nil
 } // func (q *Queue) Submit(j *job.Job) error
 
+// Start activates the queue.
+func (q *Queue) Start() {
+	go q.loop()
+} // func (q *Queue) Start()
+
 // "private"
 
+// The Queue's main loop, this is meant to be run in a separate goroutine.
 func (q *Queue) loop() {
 	q.active.Store(true)
 	defer q.active.Store(false)
 
+	for {
+		var (
+			err              error
+			j                *job.Job
+			outpath, errpath string
+			outbase, errbase string
+		)
+
+		j = q.q.dequeue()
+
+		// generate file names for spooling
+		outbase = fmt.Sprintf("jobq.%d.out", j.ID)
+		errbase = fmt.Sprintf("jobq.%d.err", j.ID)
+
+		outpath = filepath.Join(common.SpoolDir, outbase)
+		errpath = filepath.Join(common.SpoolDir, errbase)
+
+		if err = j.Start(outpath, errpath); err != nil {
+			q.log.Printf("[ERROR] Failed to start job %d: %s\n",
+				j.ID,
+				err.Error())
+			continue // Really? Just bail? No! FIXME
+		}
+
+		// Wait for iiiiit. Literally.
+		if err = j.Wait(); err != nil {
+			q.log.Printf("[ERROR] Job %d failed: %s\n",
+				j.ID,
+				err.Error())
+		}
+	}
 } // func (q *Queue) loop()
