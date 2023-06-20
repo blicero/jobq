@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 19. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-19 20:20:46 krylon>
+// Time-stamp: <2023-06-20 05:27:31 krylon>
 
 package queue
 
@@ -43,16 +43,15 @@ func (q *fifo) length() int {
 
 func (q *fifo) enqueue(j *job.Job) {
 	q.lock.Lock()
+	defer q.lock.Unlock()
 
-	q.tail = &fifoLink{job: j, next: q.tail}
-	if q.head == nil { // i.e. fifo is empty
-		q.head = q.tail
+	q.head = &fifoLink{job: j, next: q.head}
+	if q.head.next == nil { // i.e. fifo is empty
+		q.tail = q.head
 		q.notempty.Signal()
 	}
 
 	q.cnt++
-
-	q.lock.Unlock()
 } // func (q *queue) enqueue(j *job.Job)
 
 // nolint: unused
