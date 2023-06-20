@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 19. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-20 05:24:34 krylon>
+// Time-stamp: <2023-06-20 06:38:25 krylon>
 
 package queue
 
@@ -150,5 +150,9 @@ func TestFIFOBlock(t *testing.T) {
 		t.Fatalf("Unexpected value in counter: %d (expected %d)",
 			c,
 			-testCnt)
+	}
+
+	if j := tq.dequeueNB(); j != nil {
+		t.Fatalf("dequeueNB on empty fifo should return nil")
 	}
 } // func TestFIFOBlock(t *testing.T)
