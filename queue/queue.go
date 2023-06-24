@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 19. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-19 20:22:18 krylon>
+// Time-stamp: <2023-06-23 11:17:54 krylon>
 
 // Package queue implements the queueing of jobs.
 package queue
@@ -68,7 +68,7 @@ func (q *Queue) loop() {
 	q.active.Store(true)
 	defer q.active.Store(false)
 
-	for {
+	for q.active.Load() {
 		var (
 			err              error
 			j                *job.Job
