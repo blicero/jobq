@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-06-20 05:29:41 krylon>
+# Time-stamp: <2023-06-24 20:06:06 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -148,7 +148,11 @@
      It would be nice if I could support pipelines, like a shell script. I
      could go cheap and just make it a shell script and then run the shell,
      but ... it doesn't feel right, does it?
-**** TODO Queue
+**** TODO Queue [0/1]
+     :PROPERTIES:
+     :COOKIE_DATA: todo recursive
+     :VISIBILITY: children
+     :END:
      :LOGBOOK:
      CLOCK: [2023-06-20 Di 03:45]--[2023-06-20 Di 05:29] =>  1:44
      CLOCK: [2023-06-19 Mo 19:01]--[2023-06-19 Mo 20:29] =>  1:28
@@ -162,4 +166,13 @@
      the /Job/ Queue the rest of the program interfaces with uses that data
      structure but adds some functionality. It's unfortunate, perhaps, that
      both the basic data structure and the Job monitor are called "queue". 
+***** TODO Persistence                                              :feature:
+      It would be nice if I could persist the queue to disk in some way, so I
+      can recover it after a crash and e.g. still associate spool files with a
+      Job.
+      I am not sure how I exactly I'll do that. SQLite surely would be up to
+      the task, but I end up using it practically in all my projects, and I
+      would like to use something else for once. Maybe bolt or BuntDB? Maybe
+      something else entirely. The possibilities are endless, but I don't want
+      to waste too much time on exploring obscure alternatives.
 ** Bugs
