@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 19. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-23 11:17:54 krylon>
+// Time-stamp: <2023-06-29 15:41:49 krylon>
 
 // Package queue implements the queueing of jobs.
 package queue
@@ -60,6 +60,17 @@ func (q *Queue) Submit(j *job.Job) error {
 func (q *Queue) Start() {
 	go q.loop()
 } // func (q *Queue) Start()
+
+// Active returns the Queue's active flag.
+func (q *Queue) Active() bool {
+	return q.active.Load()
+} // func (q *Queue) Active() bool
+
+// Stop clears the Queue's active flag. This does not terminate any
+// running jobs.
+func (q *Queue) Stop() {
+	q.active.Store(false)
+} // func (q *Queue) Stop()
 
 // "private"
 
