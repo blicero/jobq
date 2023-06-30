@@ -2,9 +2,9 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-29 15:59:24 krylon>
+// Time-stamp: <2023-06-30 17:24:25 krylon>
 
-package job
+package queue
 
 import (
 	"fmt"
