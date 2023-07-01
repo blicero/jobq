@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 19. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-01 18:01:23 krylon>
+// Time-stamp: <2023-07-01 19:38:05 krylon>
 
 // Package queue implements the queueing of jobs.
 package queue
@@ -17,8 +17,6 @@ import (
 	"github.com/blicero/jobq/common"
 	"github.com/blicero/jobq/job"
 	"github.com/blicero/jobq/logdomain"
-	"gorm.io/driver/sqlite"
-	"gorm.io/gorm"
 )
 
 // Queue is the job queue.
@@ -26,7 +24,6 @@ type Queue struct {
 	q      fifo
 	log    *log.Logger
 	active atomic.Bool // nolint: unused
-	db     *gorm.DB
 }
 
 // New creates a new Job Queue.
@@ -34,21 +31,13 @@ func New() (*Queue, error) {
 	var (
 		err error
 		q   = new(Queue)
-		cfg gorm.Config
 	)
 
 	fifoInit(&q.q)
 
 	if q.log, err = common.GetLogger(logdomain.Queue); err != nil {
 		return nil, err
-	} else if q.db, err = gorm.Open(sqlite.Open(common.DbPath), &cfg); err != nil {
-		q.log.Printf("[ERROR] Failed to open database %s: %s\n",
-			common.DbPath,
-			err.Error())
-		return nil, err
 	}
-
-	q.db.AutoMigrate(&job.Job{})
 
 	return q, nil
 } // func New() (*Queue, error)
