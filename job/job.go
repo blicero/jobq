@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-19 20:18:34 krylon>
+// Time-stamp: <2023-07-01 17:52:59 krylon>
 
 // Package job provides the Job type.
 package job
@@ -17,6 +17,8 @@ import (
 	"strings"
 	"sync/atomic"
 	"time"
+
+	"gorm.io/gorm"
 )
 
 var (
@@ -98,8 +100,9 @@ type Options struct {
 //
 // proc (private) is a handle to process while it is running.
 type Job struct {
+	gorm.Model
+	Options
 	ID            int64
-	Options       Options
 	TimeSubmitted time.Time
 	TimeStarted   time.Time
 	TimeEnded     time.Time
@@ -117,9 +120,9 @@ type Job struct {
 func New(options Options, cmd ...string) (*Job, error) {
 	var (
 		j = &Job{
+			Options:  options,
 			ID:       getID(),
 			Cmd:      cmd,
-			Options:  options,
 			ExitCode: -1,
 		}
 	)
