@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-06-30 20:49:10 krylon>
+# Time-stamp: <2023-07-01 17:42:27 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -132,6 +132,19 @@
    :COOKIE_DATA: todo recursive
    :VISIBILITY: children
    :END:
+*** Database [0/0]
+    :PROPERTIES:
+    :COOKIE_DATA: todo recursive
+    :VISIBILITY: children
+    :END:
+    :LOGBOOK:
+    CLOCK: [2023-07-01 Sa 17:40]
+    :END:
+    I'll just roll with SQLite, no experiments. Unless somebody builds an
+    SQLite-like library that operates on JSON or CSV files, it is just too
+    convenient to even seriously consider alternatives.
+    However, I might consider using something ORM-like to avoid writing such
+    endless masses of boilerplate code.
 *** Data types [0/2]
     :PROPERTIES:
     :COOKIE_DATA: todo recursive
@@ -154,6 +167,7 @@
      :VISIBILITY: children
      :END:
      :LOGBOOK:
+     CLOCK: [2023-07-01 Sa 17:36]--[2023-07-01 Sa 17:38] =>  0:02
      CLOCK: [2023-06-30 Fr 17:23]--[2023-06-30 Fr 20:48] =>  3:25
      CLOCK: [2023-06-29 Do 17:57]--[2023-06-29 Do 18:25] =>  0:28
      CLOCK: [2023-06-29 Do 15:34]--[2023-06-29 Do 16:43] =>  1:09
@@ -178,4 +192,11 @@
       would like to use something else for once. Maybe bolt or BuntDB? Maybe
       something else entirely. The possibilities are endless, but I don't want
       to waste too much time on exploring obscure alternatives.
+
+      [2023-07-01 Sa 17:36]
+      After having a very early, primitive version of the Queue working, I
+      realized I actually need to have *some* kind of persistence for
+      information about finished or failed jobs.
+      So here we go. Instead of an in-memory queue, I can just put everything
+      in a database and have that be my queue.
 ** Bugs
