@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-07-01 19:40:37 krylon>
+# Time-stamp: <2023-07-03 18:22:41 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -17,17 +17,17 @@
   NEEDED A NAME TO GET STARTED. I HOPE I'LL FIND A BETTER NAME EVENTUALLY.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-07-01 Sa 19:40]
+   #+CAPTION: Clock summary at [2023-07-03 Mo 18:22]
    | Headline                 | Time    |       |       |       |
    |--------------------------+---------+-------+-------+-------|
-   | *Total time*             | *18:22* |       |       |       |
+   | *Total time*             | *20:56* |       |       |       |
    |--------------------------+---------+-------+-------+-------|
-   | jobq                     | 18:22   |       |       |       |
+   | jobq                     | 20:56   |       |       |       |
    | \_  Features [0/6]       |         |  0:29 |       |       |
    | \_    Enqueue jobs [0/2] |         |       |  0:09 |       |
    | \_      Scheduling       |         |       |       |  0:09 |
-   | \_  Components [0/1]     |         | 17:53 |       |       |
-   | \_    Database [0/0]     |         |       |  1:59 |       |
+   | \_  Components [0/1]     |         | 20:27 |       |       |
+   | \_    Database [0/0]     |         |       |  4:33 |       |
    | \_    Data types [0/2]   |         |       | 15:54 |       |
    | \_      Job              |         |       |       |  5:13 |
    | \_      Queue [0/1]      |         |       |       | 10:41 |
@@ -139,7 +139,8 @@
     :VISIBILITY: children
     :END:
     :LOGBOOK:
-    CLOCK: [2023-07-01 Sa 19:40]
+    CLOCK: [2023-07-03 Mo 18:13]--[2023-07-03 Mo 18:22] =>  0:09
+    CLOCK: [2023-07-01 Sa 19:40]--[2023-07-01 Sa 22:05] =>  2:25
     CLOCK: [2023-07-01 Sa 17:40]--[2023-07-01 Sa 19:39] =>  1:59
     :END:
     I'll just roll with SQLite, no experiments. Unless somebody builds an
@@ -150,6 +151,10 @@
     [2023-07-01 Sa 19:24] So, gorm appears to have an API I find aesthetically
     unpleasant. I'll skip. But I'm looking at GoSQL next, which at first
     glance looks more pleasant to use.
+    [2023-07-03 Mo 18:12] Nah, GoSQL wasn't my cup of tea either. I'll just go
+    with my usual approach, maybe I can find a way to make it a little bit
+    more elegant.
+    
 *** Data types [0/2]
     :PROPERTIES:
     :COOKIE_DATA: todo recursive
