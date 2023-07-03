@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-03 19:05:33 krylon>
+// Time-stamp: <2023-07-03 19:41:27 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -242,6 +242,43 @@ PREPARE_QUERY:
 	return stmt, nil
 } // func (db *Database) getQuery(query.ID) (*sql.Stmt, error)
 
-func (db *Database) JobAdd(j *job.Job) error {
-	return krylib.ErrNotImplemented
-} // func (db *Database) JobAdd(j *job.Job) error
+func (db *Database) JobSubmit(j *job.Job) error {
+	const qid query.ID = query.JobSubmit
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return err
+	}
+
+	var rows *sql.Rows
+
+EXEC_QUERY:
+	if rows, err = stmt.Query(j.TimeSubmitted.Unix(), j.CmdString()); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to persist new Job to database: %s\n",
+			err.Error())
+		return err
+	}
+
+	defer rows.Close() // nolint: errcheck,gosec
+
+	rows.Next()
+
+	if err = rows.Scan(&j.ID); err != nil {
+		db.log.Printf("[ERROR] Cannot extract Job ID from row: %s\n",
+			err.Error())
+		return err
+	}
+
+	return nil
+} // func (db *Database) JobSubmit(j *job.Job) error

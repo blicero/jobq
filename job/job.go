@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-01 19:37:20 krylon>
+// Time-stamp: <2023-07-03 19:38:41 krylon>
 
 // Package job provides the Job type.
 package job
@@ -126,6 +126,11 @@ func New(options Options, cmd ...string) (*Job, error) {
 
 	return j, nil
 } // func New(maxdur time.Duration, cmd ...string) (*Job, error)
+
+// CmdString returns the Job's command line as a single string.
+func (j *Job) CmdString() string {
+	return strings.Join(j.Cmd, " ")
+} // func (j *Job) CmdString() string
 
 // Start attempts to prepare everything needed for the Job's execution and
 // then start it.
