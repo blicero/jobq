@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 17. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-06-19 14:38:08 krylon>
+// Time-stamp: <2023-07-01 19:46:49 krylon>
 
 // Package logdomain provides symbolic constants for the various parts of
 // the application that log messages.
@@ -18,6 +18,7 @@ const (
 	Common ID = iota
 	Job
 	Queue
+	Database
 )
 
 // AllDomains returns a slice of all the valid values for ID.
@@ -26,5 +27,6 @@ func AllDomains() []ID {
 		Common,
 		Job,
 		Queue,
+		Database,
 	}
 } // func AllDomains() []ID
