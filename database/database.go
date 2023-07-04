@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-03 19:41:27 krylon>
+// Time-stamp: <2023-07-04 21:30:09 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -11,6 +11,7 @@ package database
 
 import (
 	"database/sql"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"log"
@@ -78,6 +79,7 @@ func waitForRetry() {
 type Database struct {
 	id      int64
 	db      *sql.DB
+	tx      *sql.Tx
 	log     *log.Logger
 	path    string
 	queries map[query.ID]*sql.Stmt
@@ -242,6 +244,78 @@ PREPARE_QUERY:
 	return stmt, nil
 } // func (db *Database) getQuery(query.ID) (*sql.Stmt, error)
 
+// Begin begins an explicit database transaction.
+// Only one transaction can be in progress at once, attempting to start one,
+// while another transaction is already in progress will yield ErrTxInProgress.
+func (db *Database) Begin() error {
+	var err error
+
+	db.log.Printf("[DEBUG] Database#%d Begin Transaction\n",
+		db.id)
+
+	if db.tx != nil {
+		return ErrTxInProgress
+	}
+
+BEGIN_TX:
+	for db.tx == nil {
+		if db.tx, err = db.db.Begin(); err != nil {
+			if worthARetry(err) {
+				waitForRetry()
+				continue BEGIN_TX
+			} else {
+				db.log.Printf("[ERROR] Failed to start transaction: %s\n",
+					err.Error())
+				return err
+			}
+		}
+	}
+
+	return nil
+} // func (db *Database) Begin() error
+
+// Rollback terminates a pending transaction, undoing any changes to the
+// database made during that transaction.
+// If no transaction is active, it returns ErrNoTxInProgress
+func (db *Database) Rollback() error {
+	var err error
+
+	db.log.Printf("[DEBUG] Database#%d Roll back Transaction\n",
+		db.id)
+
+	if db.tx == nil {
+		return ErrNoTxInProgress
+	} else if err = db.tx.Rollback(); err != nil {
+		return fmt.Errorf("Cannot roll back database transaction: %s",
+			err.Error())
+	}
+
+	db.tx = nil
+
+	return nil
+} // func (db *Database) Rollback() error
+
+// Commit ends the active transaction, making any changes made during that
+// transaction permanent and visible to other connections.
+// If no transaction is active, it returns ErrNoTxInProgress
+func (db *Database) Commit() error {
+	var err error
+
+	db.log.Printf("[DEBUG] Database#%d Commit Transaction\n",
+		db.id)
+
+	if db.tx == nil {
+		return ErrNoTxInProgress
+	} else if err = db.tx.Commit(); err != nil {
+		return fmt.Errorf("Cannot commit transaction: %s",
+			err.Error())
+	}
+
+	db.tx = nil
+	return nil
+} // func (db *Database) Commit() error
+
+// JobSubmit adds a new Job to the database.
 func (db *Database) JobSubmit(j *job.Job) error {
 	const qid query.ID = query.JobSubmit
 	var (
@@ -254,6 +328,8 @@ func (db *Database) JobSubmit(j *job.Job) error {
 			qid,
 			err.Error())
 		return err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
 	}
 
 	var rows *sql.Rows
@@ -282,3 +358,268 @@ EXEC_QUERY:
 
 	return nil
 } // func (db *Database) JobSubmit(j *job.Job) error
+
+// JobStart marks a Job as having started.
+func (db *Database) JobStart(j *job.Job) error {
+	const qid query.ID = query.JobStart
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var stamp = time.Now()
+
+EXEC_QUERY:
+	if _, err = stmt.Exec(stamp.Unix(), j.ID); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to mark Job as started: %s\n",
+			err.Error())
+		return err
+	}
+
+	j.TimeStarted = stamp
+	return nil
+} // func (db *Database) JobStart(j *job.Job) error
+
+// JobFinish marks a Job as finished.
+func (db *Database) JobFinish(j *job.Job) error {
+	const qid query.ID = query.JobFinish
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var stamp = time.Now()
+
+EXEC_QUERY:
+	if _, err = stmt.Exec(stamp.Unix(), j.ExitCode, j.ID); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to mark Job as finished: %s\n",
+			err.Error())
+		return err
+	}
+
+	j.TimeEnded = stamp
+	return nil
+} // func (db *Database) JobFinish(j *job.Job) error
+
+// JobGetByID looks up a Job by its ID. If no Job with the given ID exists, it
+// is not considered an error, in that case (nil, nil) is returned.
+func (db *Database) JobGetByID(id int64) (*job.Job, error) {
+	const qid query.ID = query.JobGetByID
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return nil, err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var rows *sql.Rows
+
+EXEC_QUERY:
+	if rows, err = stmt.Query(id); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to query database for Job %d: %s\n",
+			id,
+			err.Error())
+		return nil, err
+	}
+
+	defer rows.Close() // nolint: errcheck
+
+	if rows.Next() {
+		var (
+			submit           int64
+			start, end, exit *int64
+			cmd              string
+			j                = &job.Job{ID: id}
+		)
+
+		if err = rows.Scan(&submit, &start, &end, &exit, &cmd, &j.SpoolOut, &j.SpoolErr); err != nil {
+			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
+				err.Error())
+			return nil, err
+		}
+
+		j.TimeSubmitted = time.Unix(submit, 0)
+		if start != nil {
+			j.TimeStarted = time.Unix(*start, 0)
+		}
+		if end != nil {
+			j.TimeEnded = time.Unix(*end, 0)
+		}
+		if exit != nil {
+			j.ExitCode = int(*exit)
+		}
+
+		if err = json.Unmarshal([]byte(cmd), &j.Cmd); err != nil {
+			db.log.Printf("[ERROR] Cannot parse JSON into Cmd: %s\nRaw: %s\n",
+				err.Error(),
+				cmd)
+			return nil, err
+		}
+
+		return j, nil
+	}
+
+	return nil, nil
+} // func (db *Database) JobGetByID(id int64) (*job.Job, error)
+
+// JobGetPending returns up to <max> Jobs that have been submitted but not yet started.
+func (db *Database) JobGetPending(max int64) ([]*job.Job, error) {
+	const qid query.ID = query.JobGetPending
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return nil, err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var rows *sql.Rows
+
+EXEC_QUERY:
+	if rows, err = stmt.Query(max); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to query database for pending Jobs: %s\n",
+			err.Error())
+		return nil, err
+	}
+
+	defer rows.Close() // nolint: errcheck
+	var jobs = make([]*job.Job, 0)
+
+	for rows.Next() {
+		var (
+			submit int64
+			cmd    string
+			j      = &job.Job{}
+		)
+
+		if err = rows.Scan(&j.ID, &submit, &cmd, &j.SpoolOut, &j.SpoolErr); err != nil {
+			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
+				err.Error())
+			return nil, err
+		} else if err = json.Unmarshal([]byte(cmd), &j.Cmd); err != nil {
+			db.log.Printf("[ERROR] Cannot restore Job command arguments from JSON: %s\nRaw: %s\n",
+				err.Error(),
+				cmd)
+			return nil, err
+		}
+
+		j.TimeSubmitted = time.Unix(submit, 0)
+		jobs = append(jobs, j)
+	}
+
+	return jobs, nil
+} // func (db *Database) JobGetPending(max int64) ([]*job.Job, error)
+
+// JobGetRunning returns the list of Jobs (possibly empty) that are currently being executed.
+func (db *Database) JobGetRunning() ([]*job.Job, error) {
+	const qid query.ID = query.JobGetRunning
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return nil, err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var rows *sql.Rows
+
+EXEC_QUERY:
+	if rows, err = stmt.Query(); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to query database for running Jobs: %s\n",
+			err.Error())
+		return nil, err
+	}
+
+	defer rows.Close() // nolint: errcheck
+	var jobs = make([]*job.Job, 0)
+
+	for rows.Next() {
+		var (
+			submit, start int64
+			cmd           string
+			j             = &job.Job{}
+		)
+
+		if err = rows.Scan(&submit, &start, &cmd, &j.SpoolOut, &j.SpoolErr); err != nil {
+			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
+				err.Error())
+			return nil, err
+		}
+
+		j.TimeSubmitted = time.Unix(submit, 0)
+		j.TimeStarted = time.Unix(start, 0)
+
+		if err = json.Unmarshal([]byte(cmd), &j.Cmd); err != nil {
+			db.log.Printf("[ERROR] Cannot parse JSON into Cmd: %s\nRaw: %s\n",
+				err.Error(),
+				cmd)
+			return nil, err
+		}
+
+		jobs = append(jobs, j)
+	}
+
+	return jobs, nil
+} // func (db *Database) JobGetRunning() ([]*job.Job, error)

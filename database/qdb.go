@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 03. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-03 18:55:25 krylon>
+// Time-stamp: <2023-07-04 21:16:52 krylon>
 
 package database
 
@@ -13,10 +13,9 @@ var qDB = map[query.ID]string{
 INSERT INTO job (submitted, cmd) VALUES (?, ?) RETURNING id
 `,
 	query.JobStart:  "UPDATE job SET started = ? WHERE id = ?",
-	query.JobFinish: "UPDATE job SET ended = ? WHERE id = ?",
+	query.JobFinish: "UPDATE job SET ended = ?, exitcode = ? WHERE id = ?",
 	query.JobGetByID: `
 SELECT
-	id,
 	submitted,
 	started,
 	ended,
@@ -43,6 +42,7 @@ LIMIT ?
 SELECT
 	id,
 	submitted,
+        started,
 	cmd,
 	spoolout,
 	spoolerr

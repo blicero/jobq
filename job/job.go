@@ -2,13 +2,14 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-03 19:38:41 krylon>
+// Time-stamp: <2023-07-04 20:13:12 krylon>
 
 // Package job provides the Job type.
 package job
 
 import (
 	"compress/gzip"
+	"encoding/json"
 	"errors"
 	"fmt"
 	"io"
@@ -129,7 +130,17 @@ func New(options Options, cmd ...string) (*Job, error) {
 
 // CmdString returns the Job's command line as a single string.
 func (j *Job) CmdString() string {
-	return strings.Join(j.Cmd, " ")
+	//return strings.Join(j.Cmd, " ")
+	var (
+		err error
+		buf []byte
+	)
+
+	if buf, err = json.Marshal(j.Cmd); err != nil {
+		panic(err)
+	}
+
+	return string(buf)
 } // func (j *Job) CmdString() string
 
 // Start attempts to prepare everything needed for the Job's execution and
