@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-04 20:13:12 krylon>
+// Time-stamp: <2023-07-05 20:17:19 krylon>
 
 // Package job provides the Job type.
 package job
@@ -16,17 +16,8 @@ import (
 	"os"
 	"os/exec"
 	"strings"
-	"sync/atomic"
 	"time"
 )
-
-var (
-	idcnt atomic.Int64
-)
-
-func getID() int64 {
-	return idcnt.Add(1)
-} // func getID() int64
 
 // Error is an error type to represent errors related to the lifecycle
 // of a Job.
@@ -119,7 +110,6 @@ func New(options Options, cmd ...string) (*Job, error) {
 	var (
 		j = &Job{
 			Options:  options,
-			ID:       getID(),
 			Cmd:      cmd,
 			ExitCode: -1,
 		}
