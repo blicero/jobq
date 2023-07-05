@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-05 20:00:10 krylon>
+// Time-stamp: <2023-07-05 20:23:21 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -466,13 +466,14 @@ EXEC_QUERY:
 
 	if rows.Next() {
 		var (
-			submit           int64
-			start, end, exit *int64
-			cmd              string
-			j                = &job.Job{ID: id}
+			submit             int64
+			start, end, exit   *int64
+			cmd                string
+			spoolout, spoolerr *string
+			j                  = &job.Job{ID: id}
 		)
 
-		if err = rows.Scan(&submit, &start, &end, &exit, &cmd, &j.SpoolOut, &j.SpoolErr); err != nil {
+		if err = rows.Scan(&submit, &start, &end, &exit, &cmd, &spoolout, &spoolerr); err != nil {
 			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
 				err.Error())
 			return nil, err
@@ -487,6 +488,14 @@ EXEC_QUERY:
 		}
 		if exit != nil {
 			j.ExitCode = int(*exit)
+		}
+
+		if spoolout != nil {
+			j.SpoolOut = *spoolout
+		}
+
+		if spoolerr != nil {
+			j.SpoolErr = *spoolerr
 		}
 
 		if err = json.Unmarshal([]byte(cmd), &j.Cmd); err != nil {
