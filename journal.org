@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-07-04 23:18:36 krylon>
+# Time-stamp: <2023-07-05 20:28:18 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -17,17 +17,17 @@
   NEEDED A NAME TO GET STARTED. I HOPE I'LL FIND A BETTER NAME EVENTUALLY.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-07-04 Di 23:18]
+   #+CAPTION: Clock summary at [2023-07-05 Mi 20:28]
    | Headline                 | Time      |         |       |       |
    |--------------------------+-----------+---------+-------+-------|
-   | *Total time*             | *1d 3:06* |         |       |       |
+   | *Total time*             | *1d 3:55* |         |       |       |
    |--------------------------+-----------+---------+-------+-------|
-   | jobq                     | 1d 3:06   |         |       |       |
+   | jobq                     | 1d 3:55   |         |       |       |
    | \_  Features [0/6]       |           |    0:29 |       |       |
    | \_    Enqueue jobs [0/2] |           |         |  0:09 |       |
    | \_      Scheduling       |           |         |       |  0:09 |
-   | \_  Components [0/1]     |           | 1d 2:37 |       |       |
-   | \_    Database [0/0]     |           |         | 10:43 |       |
+   | \_  Components [0/1]     |           | 1d 3:26 |       |       |
+   | \_    Database [0/0]     |           |         | 11:32 |       |
    | \_    Data types [0/2]   |           |         | 15:54 |       |
    | \_      Job              |           |         |       |  5:13 |
    | \_      Queue [0/1]      |           |         |       | 10:41 |
@@ -139,6 +139,7 @@
     :VISIBILITY: children
     :END:
     :LOGBOOK:
+    CLOCK: [2023-07-05 Mi 19:39]--[2023-07-05 Mi 20:28] =>  0:49
     CLOCK: [2023-07-04 Di 19:19]--[2023-07-04 Di 21:35] =>  2:16
     CLOCK: [2023-07-04 Di 18:26]--[2023-07-04 Di 19:04] =>  0:38
     CLOCK: [2023-07-03 Mo 18:30]--[2023-07-03 Mo 21:46] =>  3:16
