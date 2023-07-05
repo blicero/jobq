@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 03. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-04 21:16:52 krylon>
+// Time-stamp: <2023-07-05 19:41:07 krylon>
 
 package database
 
@@ -54,12 +54,15 @@ ORDER BY submitted
 SELECT
 	id,
 	submitted,
+        started,
+        ended,
+        exitcode,
 	cmd,
 	spoolout,
 	spoolerr
 FROM job
 WHERE ended IS NOT NULL
-ORDER BY submitted
+ORDER BY ended DESC
 LIMIT ?
 `,
 }

@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-04 21:30:09 krylon>
+// Time-stamp: <2023-07-05 20:00:10 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -623,3 +623,67 @@ EXEC_QUERY:
 
 	return jobs, nil
 } // func (db *Database) JobGetRunning() ([]*job.Job, error)
+
+// JobGetFinished returns the <max> most recently finished Jobs.
+// Passing -1 for max means all of them.
+func (db *Database) JobGetFinished(max int64) ([]*job.Job, error) {
+	const qid query.ID = query.JobGetFinished
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return nil, err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var rows *sql.Rows
+
+EXEC_QUERY:
+	if rows, err = stmt.Query(max); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to query database for running Jobs: %s\n",
+			err.Error())
+		return nil, err
+	}
+
+	defer rows.Close() // nolint: errcheck
+	var jobs = make([]*job.Job, 0)
+
+	for rows.Next() {
+		var (
+			submit, start int64
+			cmd           string
+			j             = &job.Job{}
+		)
+
+		if err = rows.Scan(&submit, &start, &cmd, &j.SpoolOut, &j.SpoolErr); err != nil {
+			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
+				err.Error())
+			return nil, err
+		}
+
+		j.TimeSubmitted = time.Unix(submit, 0)
+		j.TimeStarted = time.Unix(start, 0)
+
+		if err = json.Unmarshal([]byte(cmd), &j.Cmd); err != nil {
+			db.log.Printf("[ERROR] Cannot parse JSON into Cmd: %s\nRaw: %s\n",
+				err.Error(),
+				cmd)
+			return nil, err
+		}
+
+		jobs = append(jobs, j)
+	}
+
+	return jobs, nil
+} // func (db *Database) JobGetFinished(max int64) ([]*job.Job, error)

@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-03 18:55:42 krylon>
+// Time-stamp: <2023-07-05 20:06:05 krylon>
 
 package database
 
@@ -22,4 +22,5 @@ CREATE TABLE job (
 ) STRICT
 `,
 	"CREATE INDEX job_submit_idx ON job (submitted)",
+	"CREATE INDEX job_end_null_idx ON job (ended IS NOT NULL)",
 }
