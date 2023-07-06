@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 05. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-05 20:21:32 krylon>
+// Time-stamp: <2023-07-06 20:45:27 krylon>
 
 package database
 
@@ -41,6 +41,8 @@ func TestParseQueries(t *testing.T) {
 	}
 } // func TestParseQueries(t *testing.T)
 
+var tj *job.Job
+
 func TestJobSubmit(t *testing.T) {
 	if db == nil {
 		t.SkipNow()
@@ -64,6 +66,8 @@ func TestJobSubmit(t *testing.T) {
 		t.Fatal("Job ID after submission must not be 0")
 	}
 
+	tj = j
+
 	var j2 *job.Job
 
 	if j2, err = db.JobGetByID(j.ID); err != nil {
@@ -74,3 +78,22 @@ func TestJobSubmit(t *testing.T) {
 			j.ID)
 	}
 } // func TestJobSubmit(t *testing.T)
+
+func TestJobGetPending(t *testing.T) {
+	if db == nil || tj == nil {
+		t.SkipNow()
+	}
+
+	var (
+		err  error
+		jobs []*job.Job
+	)
+
+	if jobs, err = db.JobGetPending(-1); err != nil {
+		t.Fatalf("Failed to get list of pending Jobs: %s",
+			err.Error())
+	} else if len(jobs) != 1 {
+		t.Fatalf("Unexpected number of Jobs pending: %d (expected 1)",
+			len(jobs))
+	}
+} // func TestJobGetPending(t *testing.T)

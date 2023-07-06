@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-05 20:23:21 krylon>
+// Time-stamp: <2023-07-06 20:49:16 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -547,12 +547,13 @@ EXEC_QUERY:
 
 	for rows.Next() {
 		var (
-			submit int64
-			cmd    string
-			j      = &job.Job{}
+			submit     int64
+			cmd        string
+			jout, jerr *string
+			j          = &job.Job{}
 		)
 
-		if err = rows.Scan(&j.ID, &submit, &cmd, &j.SpoolOut, &j.SpoolErr); err != nil {
+		if err = rows.Scan(&j.ID, &submit, &cmd, &jout, &jerr); err != nil {
 			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
 				err.Error())
 			return nil, err
@@ -561,6 +562,13 @@ EXEC_QUERY:
 				err.Error(),
 				cmd)
 			return nil, err
+		}
+
+		if jout != nil {
+			j.SpoolOut = *jout
+		}
+		if jerr != nil {
+			j.SpoolErr = *jerr
 		}
 
 		j.TimeSubmitted = time.Unix(submit, 0)
@@ -608,13 +616,21 @@ EXEC_QUERY:
 		var (
 			submit, start int64
 			cmd           string
+			jerr, jout    *string
 			j             = &job.Job{}
 		)
 
-		if err = rows.Scan(&submit, &start, &cmd, &j.SpoolOut, &j.SpoolErr); err != nil {
+		if err = rows.Scan(&submit, &start, &cmd, &jout, &jerr); err != nil {
 			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
 				err.Error())
 			return nil, err
+		}
+
+		if jout != nil {
+			j.SpoolOut = *jout
+		}
+		if jerr != nil {
+			j.SpoolErr = *jerr
 		}
 
 		j.TimeSubmitted = time.Unix(submit, 0)
@@ -672,10 +688,11 @@ EXEC_QUERY:
 		var (
 			submit, start int64
 			cmd           string
+			jout, jerr    *string
 			j             = &job.Job{}
 		)
 
-		if err = rows.Scan(&submit, &start, &cmd, &j.SpoolOut, &j.SpoolErr); err != nil {
+		if err = rows.Scan(&submit, &start, &cmd, &jout, &jerr); err != nil {
 			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
 				err.Error())
 			return nil, err
@@ -683,6 +700,12 @@ EXEC_QUERY:
 
 		j.TimeSubmitted = time.Unix(submit, 0)
 		j.TimeStarted = time.Unix(start, 0)
+		if jout != nil {
+			j.SpoolOut = *jout
+		}
+		if jerr != nil {
+			j.SpoolErr = *jerr
+		}
 
 		if err = json.Unmarshal([]byte(cmd), &j.Cmd); err != nil {
 			db.log.Printf("[ERROR] Cannot parse JSON into Cmd: %s\nRaw: %s\n",
