@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-05 20:17:19 krylon>
+// Time-stamp: <2023-07-07 16:11:30 krylon>
 
 // Package job provides the Job type.
 package job
@@ -176,6 +176,7 @@ func (j *Job) Start(outpath, errpath string) error {
 
 	j.proc.Stdout = outc
 	j.proc.Stderr = errc
+	j.proc.Dir = j.Directory
 
 	// more stuff
 
