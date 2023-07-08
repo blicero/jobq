@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-07-06 22:17:36 krylon>
+# Time-stamp: <2023-07-08 20:00:04 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -17,20 +17,21 @@
   NEEDED A NAME TO GET STARTED. I HOPE I'LL FIND A BETTER NAME EVENTUALLY.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-07-06 Do 22:17]
+   #+CAPTION: Clock summary at [2023-07-08 Sa 20:00]
    | Headline                 | Time      |         |       |       |
    |--------------------------+-----------+---------+-------+-------|
-   | *Total time*             | *1d 5:49* |         |       |       |
+   | *Total time*             | *1d 8:02* |         |       |       |
    |--------------------------+-----------+---------+-------+-------|
-   | jobq                     | 1d 5:49   |         |       |       |
+   | jobq                     | 1d 8:02   |         |       |       |
    | \_  Features [0/6]       |           |    0:29 |       |       |
    | \_    Enqueue jobs [0/2] |           |         |  0:09 |       |
    | \_      Scheduling       |           |         |       |  0:09 |
-   | \_  Components [0/1]     |           | 1d 5:20 |       |       |
+   | \_  Components [0/1]     |           | 1d 7:33 |       |       |
    | \_    Database [0/0]     |           |         | 13:26 |       |
-   | \_    Data types [0/2]   |           |         | 15:54 |       |
+   | \_    Data types [0/2]   |           |         | 18:07 |       |
    | \_      Job              |           |         |       |  5:13 |
    | \_      Queue [0/1]      |           |         |       | 10:41 |
+   | \_      Monitor [0/0]    |           |         |       |  2:13 |
    #+END:
 ** Journal
    Here I write mainly chronologically.
@@ -214,4 +215,16 @@
       information about finished or failed jobs.
       So here we go. Instead of an in-memory queue, I can just put everything
       in a database and have that be my queue.
+**** Monitor [0/0]
+     :PROPERTIES:
+     :COOKIE_DATA: todo recursive
+     :VISIBILITY: children
+     :END:
+     :LOGBOOK:
+     CLOCK: [2023-07-08 Sa 19:58]--[2023-07-08 Sa 19:59] =>  0:01
+     CLOCK: [2023-07-08 Sa 19:28]--[2023-07-08 Sa 19:28] =>  0:00
+     CLOCK: [2023-07-08 Sa 16:42]--[2023-07-08 Sa 18:54] =>  2:12
+     :END:
+     Now we are getting somewhere.
+     The Monitor listens on a Unix domain socket and runs queued jobs.
 ** Bugs
