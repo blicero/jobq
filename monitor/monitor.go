@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-10 11:15:19 krylon>
+// Time-stamp: <2023-07-10 11:24:58 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -104,6 +104,8 @@ func (m *Monitor) Active() bool {
 } // func (m *Monitor) Active() bool
 
 func (m *Monitor) loop() {
+	defer m.q.Stop()
+
 	var buffer = make([]byte, 65536)
 
 	for m.Active() {
