@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 08. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-08 17:57:56 krylon>
+// Time-stamp: <2023-07-10 11:15:05 krylon>
 
 package monitor
 
@@ -19,8 +19,9 @@ type Message struct {
 	Request   string
 }
 
+// MakeMsg returns a new message.
 func MakeMsg(req string, j *job.Job) Message {
-	msg := &Message{
+	msg := Message{
 		Timestamp: time.Now(),
 		Job:       j,
 		Request:   req,

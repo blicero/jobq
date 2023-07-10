@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-08 19:59:15 krylon>
+// Time-stamp: <2023-07-10 11:15:19 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -18,6 +18,8 @@ import (
 	"github.com/blicero/jobq/database"
 	"github.com/blicero/jobq/logdomain"
 	"github.com/blicero/jobq/queue"
+	"github.com/davecgh/go-spew/spew"
+	"github.com/google/shlex"
 )
 
 // Monitor runs the Job Queue and accepts requests from client.
@@ -82,6 +84,7 @@ func (m *Monitor) Start() {
 	m.active = true
 	m.q.Start()
 
+	go m.loop()
 } // func (m *Monitor) Start()
 
 // Stop tells the Monitor to stop.
@@ -92,6 +95,7 @@ func (m *Monitor) Stop() {
 	m.active = false
 } // func (m *Monitor) Stop()
 
+// Active returns the Monitor's active flag
 func (m *Monitor) Active() bool {
 	m.lock.RLock()
 	var active = m.active
@@ -125,7 +129,28 @@ func (m *Monitor) loop() {
 } // func (m *Monitor) loop()
 
 func (m *Monitor) handleMessage(msg Message) {
-	switch strings.ToLower(msg.Request) {
+	m.log.Printf("[DEBUG] Handle message: %s\n",
+		spew.Sdump(&msg))
 
+	var (
+		err error
+		req []string
+		cmd string
+	)
+
+	if req, err = shlex.Split(msg.Request); err != nil {
+		m.log.Printf("[ERROR] Cannot parse Request: %s\nRaw: %s\n",
+			err.Error(),
+			msg.Request)
+		return
+	}
+
+	cmd = strings.ToLower(req[0])
+
+	switch cmd {
+	default:
+		m.log.Printf("[ERROR] Dont' know how to handle %s\n",
+			cmd)
+		return
 	}
 } // func (m *Monitor) handleMessage(msg *Message)
