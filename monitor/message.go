@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 08. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-10 11:15:05 krylon>
+// Time-stamp: <2023-07-10 19:42:09 krylon>
 
 package monitor
 
@@ -28,3 +28,10 @@ func MakeMsg(req string, j *job.Job) Message {
 	}
 	return msg
 } // func MakeMsg(req string, j *job.Job)
+
+// Response is the basic response the Monitor sends after handling a Message.
+type Response struct {
+	Timestamp time.Time
+	Sequence  int64
+	Status    string
+}
