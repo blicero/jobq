@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 17. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-07 10:03:43 krylon>
+// Time-stamp: <2023-07-10 18:12:43 krylon>
 
 // Package logdomain provides symbolic constants for the various parts of
 // the application that log messages.
@@ -19,6 +19,7 @@ const (
 	Job
 	Queue
 	Database
+	DBPool
 	Monitor
 )
 
@@ -29,6 +30,7 @@ func AllDomains() []ID {
 		Job,
 		Queue,
 		Database,
+		DBPool,
 		Monitor,
 	}
 } // func AllDomains() []ID
