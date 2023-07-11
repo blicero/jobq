@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-07-10 23:22:38 krylon>
+# Time-stamp: <2023-07-11 17:26:55 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -37,6 +37,11 @@
    Here I write mainly chronologically.
 *** [2023-06-19 Mo 20:28]
     I should write some tests for the queueing stuff before I move on.
+*** [2023-07-11 Di 17:25]
+    I have been thinking. If I keep the Jobs in the database, do I really
+    need that fancy queueing stuff? I could throw most of that out, I
+    think. It was nice to get started thinking about this, but I think I can
+    simplify that stuff *a lot*.
 ** Features [0/6]                                                   :feature:
    :PROPERTIES:
    :COOKIE_DATA: todo recursive
