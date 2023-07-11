@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 05. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-10 19:43:01 krylon>
+// Time-stamp: <2023-07-11 19:33:48 krylon>
 
 package monitor
 
@@ -15,12 +15,20 @@ import (
 	"github.com/blicero/jobq/common"
 )
 
+var socketPath string
+
 func TestMain(m *testing.M) {
 	var (
 		err     error
 		result  int
 		baseDir = time.Now().Format("/tmp/jobq_monitor_test_20060102_150405")
 	)
+
+	defer func() {
+		if socketPath != "" {
+			os.Remove(socketPath) // nolint: errcheck
+		}
+	}()
 
 	if err = common.SetBaseDir(baseDir); err != nil {
 		fmt.Printf("Cannot set base directory to %s: %s\n",

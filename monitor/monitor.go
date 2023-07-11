@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-10 21:49:49 krylon>
+// Time-stamp: <2023-07-11 19:30:23 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -12,15 +12,15 @@ import (
 	"fmt"
 	"log"
 	"net"
-	"sync"
+	"path/filepath"
 	"sync/atomic"
 	"time"
 
 	"github.com/blicero/jobq/common"
 	"github.com/blicero/jobq/database"
+	"github.com/blicero/jobq/job"
 	"github.com/blicero/jobq/logdomain"
 	"github.com/blicero/jobq/monitor/request"
-	"github.com/blicero/jobq/queue"
 	"github.com/davecgh/go-spew/spew"
 	"github.com/google/shlex"
 )
@@ -33,9 +33,7 @@ type Monitor struct {
 	path   string
 	log    *log.Logger
 	pool   *database.Pool
-	q      *queue.Queue
 	active atomic.Bool
-	lock   sync.RWMutex
 	slots  int
 	ctl    *net.UnixConn
 	seqCnt atomic.Int64
@@ -63,10 +61,6 @@ func Create(name, sock string, slots int) (*Monitor, error) {
 			common.DbPath,
 			err.Error())
 		return nil, err
-	} else if m.q, err = queue.New(); err != nil {
-		m.log.Printf("[ERROR] Cannot create new Job Queue: %s",
-			err.Error())
-		return nil, err
 	} else if m.ctl, err = net.ListenUnixgram("unixgram", &addr); err != nil {
 		m.log.Printf("[ERROR] Cannot open control socket %s: %s\n",
 			sock,
@@ -84,21 +78,15 @@ func (m *Monitor) Start() {
 		return
 	}
 
-	m.lock.Lock()
-	defer m.lock.Unlock()
-
 	m.active.Store(true)
-	m.q.Start()
 
-	go m.loop()
+	go m.ctlLoop()
+	go m.jobLoop()
 } // func (m *Monitor) Start()
 
 // Stop tells the Monitor to stop.
 func (m *Monitor) Stop() {
 	m.active.Store(false)
-	m.lock.Lock()
-	defer m.lock.Unlock()
-	m.q.Stop()
 } // func (m *Monitor) Stop()
 
 // Active returns the Monitor's active flag
@@ -106,10 +94,7 @@ func (m *Monitor) Active() bool {
 	return m.active.Load()
 } // func (m *Monitor) Active() bool
 
-func (m *Monitor) loop() {
-	defer m.q.Stop()
-	defer m.active.Store(false)
-
+func (m *Monitor) ctlLoop() {
 	var buffer = make([]byte, 65536)
 
 	for m.active.Load() {
@@ -132,11 +117,12 @@ func (m *Monitor) loop() {
 				buffer[:cnt])
 		}
 
-		m.log.Printf("[DEBUG] Got one message: %s\n",
+		m.log.Printf("[DEBUG] Got one message from %s: %s\n",
+			addr,
 			msg.Request)
 		go m.handleMessage(msg, addr)
 	}
-} // func (m *Monitor) loop()
+} // func (m *Monitor) ctlLoop()
 
 func (m *Monitor) handleMessage(msg Message, addr *net.UnixAddr) {
 	m.log.Printf("[DEBUG] Handle message from %s: %s\n",
@@ -212,3 +198,77 @@ func (m *Monitor) makeResponse(status string) Response {
 		Status:    status,
 	}
 } // func (m *Monitor) makeResponse(status string) Response
+
+func (m *Monitor) jobLoop() {
+	for m.active.Load() {
+		m.jobStep()
+	}
+} // func (m *Monitor) jobLoop()
+
+// I really should try to break up this method in two, so I can return the
+// database connection to the pool while the job is running.
+
+func (m *Monitor) jobStep() {
+	var (
+		err              error
+		db               *database.Database
+		jobs             []*job.Job
+		j                *job.Job
+		outpath, errpath string
+		outbase, errbase string
+	)
+
+	db = m.pool.Get()
+	defer func() {
+		if db != nil {
+			m.pool.Put(db)
+		}
+	}()
+
+	if jobs, err = db.JobGetPending(1); err != nil {
+		m.log.Printf("[ERROR] Cannot query pending Jobs: %s\n",
+			err.Error())
+		return
+	} else if len(jobs) == 0 {
+		m.log.Println("[TRACE] Database returned 0 pending jobs.")
+	}
+
+	j = jobs[0]
+
+	// generate file names for spooling
+	outbase = fmt.Sprintf("jobq.%d.out", j.ID)
+	errbase = fmt.Sprintf("jobq.%d.err", j.ID)
+
+	outpath = filepath.Join(common.SpoolDir, outbase)
+	errpath = filepath.Join(common.SpoolDir, errbase)
+
+	if err = db.JobStart(j); err != nil {
+		m.log.Printf("[ERROR] Cannot mark Job %d as started in database: %s\n",
+			j.ID,
+			err.Error())
+		return
+	} else if err = j.Start(outpath, errpath); err != nil {
+		m.log.Printf("[ERROR] Failed to start job %d: %s\n",
+			j.ID,
+			err.Error())
+		return // Really? Just bail? No! FIXME
+	}
+
+	m.pool.Put(db)
+	db = nil
+
+	// Wait for iiiiit. Literally.
+	if err = j.Wait(); err != nil {
+		m.log.Printf("[ERROR] Job %d failed: %s\n",
+			j.ID,
+			err.Error())
+	}
+
+	db = m.pool.Get()
+
+	if err = db.JobFinish(j); err != nil {
+		m.log.Printf("[ERROR] Failed to mark Job %d as finished: %s\n",
+			j.ID,
+			err.Error())
+	}
+} // func (m *Monitor) jobStep() error
