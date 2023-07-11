@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-07 16:11:30 krylon>
+// Time-stamp: <2023-07-11 18:16:17 krylon>
 
 // Package job provides the Job type.
 package job
@@ -193,9 +193,7 @@ func (j *Job) Start(outpath, errpath string) error {
 
 // Wait waits for a started Job to finish and does the post-processing.
 func (j *Job) Wait() error {
-	var (
-		err error
-	)
+	var err error
 
 	if j.proc == nil || j.proc.Process == nil {
 		return ErrJobNotStarted
@@ -210,6 +208,16 @@ func (j *Job) Wait() error {
 	}
 
 	j.TimeEnded = time.Now()
+	j.ExitCode = j.proc.ProcessState.ExitCode()
 
 	return err
 } // func (j *Job) Wait() error
+
+// Return the Jobs ProcessState
+func (j *Job) ProcState() *os.ProcessState {
+	if j.proc == nil {
+		return nil
+	}
+
+	return j.proc.ProcessState
+} // func (j *Job) ProcState() *os.ProcessState
