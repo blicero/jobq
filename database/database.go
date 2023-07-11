@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-06 20:49:16 krylon>
+// Time-stamp: <2023-07-11 21:20:41 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -379,7 +379,7 @@ func (db *Database) JobStart(j *job.Job) error {
 	var stamp = time.Now()
 
 EXEC_QUERY:
-	if _, err = stmt.Exec(stamp.Unix(), j.ID); err != nil {
+	if _, err = stmt.Exec(stamp.Unix(), j.SpoolOut, j.SpoolErr, j.ID); err != nil {
 		if worthARetry(err) {
 			waitForRetry()
 			goto EXEC_QUERY
