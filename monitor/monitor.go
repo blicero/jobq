@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-11 19:30:23 krylon>
+// Time-stamp: <2023-07-16 17:00:10 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -13,6 +13,7 @@ import (
 	"log"
 	"net"
 	"path/filepath"
+	"strings"
 	"sync/atomic"
 	"time"
 
@@ -29,14 +30,16 @@ const minDbCnt = 4
 
 // Monitor runs the Job Queue and accepts requests from client.
 type Monitor struct {
-	name   string
-	path   string
-	log    *log.Logger
-	pool   *database.Pool
-	active atomic.Bool
-	slots  int
-	ctl    *net.UnixConn
-	seqCnt atomic.Int64
+	name      string
+	path      string
+	log       *log.Logger
+	pool      *database.Pool
+	active    atomic.Bool
+	slots     int
+	ctl       *net.UnixListener
+	seqCnt    atomic.Int64
+	jobq      chan int
+	jobTicker *time.Ticker
 }
 
 // Create creates and returns a new Monitor.
@@ -44,9 +47,11 @@ func Create(name, sock string, slots int) (*Monitor, error) {
 	var (
 		err error
 		m   = &Monitor{
-			name:  name,
-			path:  sock,
-			slots: slots,
+			name:      name,
+			path:      sock,
+			slots:     slots,
+			jobq:      make(chan int),
+			jobTicker: time.NewTicker(time.Second * 5),
 		}
 		addr = net.UnixAddr{
 			Name: sock,
@@ -61,7 +66,7 @@ func Create(name, sock string, slots int) (*Monitor, error) {
 			common.DbPath,
 			err.Error())
 		return nil, err
-	} else if m.ctl, err = net.ListenUnixgram("unixgram", &addr); err != nil {
+	} else if m.ctl, err = net.ListenUnix("unixpacket", &addr); err != nil {
 		m.log.Printf("[ERROR] Cannot open control socket %s: %s\n",
 			sock,
 			err.Error())
@@ -70,6 +75,18 @@ func Create(name, sock string, slots int) (*Monitor, error) {
 
 	return m, nil
 } // func Create(name, sock string, slots int) (*Monitor, error)
+
+func (m *Monitor) jobTick() {
+	var t = time.NewTimer(time.Second * 10)
+	select {
+	case m.jobq <- 1:
+		if !t.Stop() {
+			<-t.C
+		}
+	case <-t.C:
+		m.log.Printf("[INFO] Timeout waiting to send job signal\n")
+	}
+} // func (m *Monitor) jobTick()
 
 // Start starts the Monitor and its components.
 func (m *Monitor) Start() {
@@ -95,38 +112,58 @@ func (m *Monitor) Active() bool {
 } // func (m *Monitor) Active() bool
 
 func (m *Monitor) ctlLoop() {
-	var buffer = make([]byte, 65536)
-
 	for m.active.Load() {
 		var (
 			err  error
-			cnt  int
-			msg  Message
-			addr *net.UnixAddr
+			conn *net.UnixConn
 		)
 
 		// I should probably set a timeout for reading, so I can check
 		// the active flag periodically?
-
-		if cnt, addr, err = m.ctl.ReadFromUnix(buffer); err != nil {
-			m.log.Printf("[ERROR] Cannot read from socket: %s\n",
+		if conn, err = m.ctl.AcceptUnix(); err != nil {
+			m.log.Printf("[ERROR] Error accepting new connection: %s\n",
 				err.Error())
-		} else if err = json.Unmarshal(buffer[:cnt], &msg); err != nil {
-			m.log.Printf("[ERROR] Cannot decode JSON message: %s\n%s\n\n",
-				err.Error(),
-				buffer[:cnt])
 		}
 
-		m.log.Printf("[DEBUG] Got one message from %s: %s\n",
-			addr,
-			msg.Request)
-		go m.handleMessage(msg, addr)
+		go m.handleClient(conn)
 	}
 } // func (m *Monitor) ctlLoop()
 
-func (m *Monitor) handleMessage(msg Message, addr *net.UnixAddr) {
-	m.log.Printf("[DEBUG] Handle message from %s: %s\n",
-		addr,
+func (m *Monitor) handleClient(client *net.UnixConn) {
+	const maxErr = 5
+	var (
+		err         error
+		msg         Message
+		cnt, errcnt int
+		buffer      = make([]byte, 65536)
+	)
+
+	defer client.Close() // nolint: errcheck
+
+	for m.active.Load() && errcnt < maxErr {
+		if cnt, err = client.Read(buffer); err != nil {
+			m.log.Printf("[ERROR] Failed to read from Client: %s\n",
+				err.Error())
+			errcnt++
+			continue
+		} else if err = json.Unmarshal(buffer[:cnt], &msg); err != nil {
+			m.log.Printf("[ERROR] Failed to decode message: %s\nRaw: %s\n\n",
+				err.Error(),
+				string(buffer[:cnt]))
+			errcnt++
+			continue
+		} else if err = m.handleMessage(msg, client); err != nil {
+			m.log.Printf("[ERROR] Error handling message from %s: %s\n",
+				client.RemoteAddr(),
+				err.Error())
+			errcnt++
+			continue
+		}
+	}
+} // func (m *Monitor) handleClient(client net.Conn)
+
+func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
+	m.log.Printf("[DEBUG] Handle message: %s\n",
 		spew.Sdump(&msg))
 
 	var (
@@ -141,11 +178,12 @@ func (m *Monitor) handleMessage(msg Message, addr *net.UnixAddr) {
 		m.log.Printf("[ERROR] Cannot parse Request: %s\nRaw: %s\n",
 			err.Error(),
 			msg.Request)
-		return
+		return err
 	} else if cmd, err = request.Parse(req[0]); err != nil {
 		m.log.Printf("[ERROR] Don't understand request %q: %s\n",
 			req[0],
 			err.Error())
+		return err
 	}
 
 	var db = m.pool.Get()
@@ -163,6 +201,7 @@ func (m *Monitor) handleMessage(msg Message, addr *net.UnixAddr) {
 				msg.Job.ID)
 			m.log.Printf("[DEBUG] %s\n", str)
 			res = m.makeResponse(str)
+			go m.jobTick()
 		}
 	default:
 		str = fmt.Sprintf("I don't know how to handle %s", cmd)
@@ -171,25 +210,31 @@ func (m *Monitor) handleMessage(msg Message, addr *net.UnixAddr) {
 	}
 
 	var (
-		buf []byte
-		cnt int
+		buf  []byte
+		cnt  int
+		addr = conn.RemoteAddr()
 	)
 
 	if buf, err = json.Marshal(&res); err != nil {
 		m.log.Printf("[ERROR] Cannot serialize Response to %s: %s\n",
 			addr,
 			err.Error())
-	} else if cnt, err = m.ctl.WriteToUnix(buf, addr); err != nil {
+		return err
+	} else if cnt, err = conn.Write(buf); err != nil {
 		m.log.Printf("[ERROR] Failed to send Response to %s: %s\n",
 			addr,
 			err.Error())
+		return err
 	} else if cnt != len(buf) {
 		// In this day and age, this shouldn't happen, now, should it?
 		m.log.Printf("[ERROR] Unexpected number of bytes sent in response: %d (expected %d)\n",
 			cnt,
 			len(buf))
+		return err
 	}
-} // func (m *Monitor) handleMessage(msg *Message, addr *net.UnixAddr)
+
+	return nil
+} // func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error
 
 func (m *Monitor) makeResponse(status string) Response {
 	return Response{
@@ -231,9 +276,19 @@ func (m *Monitor) jobStep() {
 		return
 	} else if len(jobs) == 0 {
 		m.log.Println("[TRACE] Database returned 0 pending jobs.")
+		select {
+		case <-m.jobTicker.C:
+		case <-m.jobq:
+			return
+		}
 	}
 
 	j = jobs[0]
+
+	m.log.Printf("[DEBUG] Starting Job %d, submitted %s ago (%q)\n",
+		j.ID,
+		time.Since(j.TimeSubmitted),
+		strings.Join(j.Cmd, " "))
 
 	// generate file names for spooling
 	outbase = fmt.Sprintf("jobq.%d.out", j.ID)
