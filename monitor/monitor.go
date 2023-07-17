@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-17 16:33:42 krylon>
+// Time-stamp: <2023-07-17 21:31:25 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -10,6 +10,7 @@ package monitor
 import (
 	"encoding/json"
 	"fmt"
+	"io"
 	"log"
 	"net"
 	"path/filepath"
@@ -51,7 +52,7 @@ func Create(name, sock string, slots int) (*Monitor, error) {
 			path:      sock,
 			slots:     slots,
 			jobq:      make(chan int),
-			jobTicker: time.NewTicker(time.Second * 5),
+			jobTicker: time.NewTicker(time.Minute * 5),
 		}
 		addr = net.UnixAddr{
 			Name: sock,
@@ -84,7 +85,7 @@ func (m *Monitor) jobTick() {
 			<-t.C
 		}
 	case <-t.C:
-		m.log.Printf("[INFO] Timeout waiting to send job signal\n")
+		m.log.Printf("[ERROR] Timeout waiting to send job signal\n")
 	}
 } // func (m *Monitor) jobTick()
 
@@ -142,6 +143,10 @@ func (m *Monitor) handleClient(client *net.UnixConn) {
 
 	for m.active.Load() && errcnt < maxErr {
 		if cnt, err = client.Read(buffer); err != nil {
+			if err == io.EOF {
+				m.log.Println("[INFO] Client closed connection.")
+				break
+			}
 			m.log.Printf("[ERROR] Failed to read from Client: %s\n",
 				err.Error())
 			errcnt++

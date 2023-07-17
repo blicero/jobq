@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 10. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-17 10:56:00 krylon>
+// Time-stamp: <2023-07-17 21:29:51 krylon>
 
 package monitor
 
@@ -116,5 +116,5 @@ func TestMonSubmit(t *testing.T) {
 		}
 	}
 
-	time.Sleep(time.Second * 30)
+	time.Sleep(time.Second * 10)
 } // func TestMonSubmit(t *testing.T)
