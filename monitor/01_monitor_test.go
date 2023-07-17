@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 10. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-16 14:29:24 krylon>
+// Time-stamp: <2023-07-17 10:56:00 krylon>
 
 package monitor
 
@@ -16,6 +16,7 @@ import (
 
 	"github.com/blicero/jobq/job"
 	"github.com/blicero/jobq/monitor/request"
+	"github.com/davecgh/go-spew/spew"
 )
 
 const netname = "unixpacket"
@@ -48,6 +49,7 @@ func TestMonSubmit(t *testing.T) {
 		err         error
 		raddr       net.UnixAddr
 		conn        *net.UnixConn
+		rcvbuf      = make([]byte, 65536)
 		directories = []string{
 			"/etc",
 			"/usr/lib",
@@ -80,6 +82,8 @@ func TestMonSubmit(t *testing.T) {
 			buf []byte
 			j   *job.Job
 			msg Message
+			res Response
+			cnt int
 			opt = job.Options{
 				Directory: d,
 				Compress:  "yes",
@@ -99,6 +103,16 @@ func TestMonSubmit(t *testing.T) {
 		} else if _, err = conn.Write(buf); err != nil {
 			t.Errorf("Cannot send JSON payload to Monitor: %s",
 				err.Error())
+		} else if cnt, err = conn.Read(rcvbuf); err != nil {
+			t.Errorf("Cannot receive reply from Monitor: %s",
+				err.Error())
+		} else if err = json.Unmarshal(rcvbuf[:cnt], &res); err != nil {
+			t.Errorf("Failed to decode Response: %s\n\n%s",
+				err.Error(),
+				string(rcvbuf[:cnt]))
+		} else {
+			t.Logf("Received Response from Monitor: %s",
+				spew.Sdump(&res))
 		}
 	}
 
