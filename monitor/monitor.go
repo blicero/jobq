@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-16 17:00:10 krylon>
+// Time-stamp: <2023-07-17 16:33:42 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -191,6 +191,7 @@ func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
 
 	switch cmd {
 	case request.JobSubmit:
+		msg.Job.TimeSubmitted = time.Now()
 		if err = db.JobSubmit(msg.Job); err != nil {
 			str = fmt.Sprintf("Failed to submit Job: %s",
 				err.Error())
@@ -278,6 +279,7 @@ func (m *Monitor) jobStep() {
 		m.log.Println("[TRACE] Database returned 0 pending jobs.")
 		select {
 		case <-m.jobTicker.C:
+			return
 		case <-m.jobq:
 			return
 		}
@@ -297,16 +299,16 @@ func (m *Monitor) jobStep() {
 	outpath = filepath.Join(common.SpoolDir, outbase)
 	errpath = filepath.Join(common.SpoolDir, errbase)
 
-	if err = db.JobStart(j); err != nil {
-		m.log.Printf("[ERROR] Cannot mark Job %d as started in database: %s\n",
-			j.ID,
-			err.Error())
-		return
-	} else if err = j.Start(outpath, errpath); err != nil {
+	if err = j.Start(outpath, errpath); err != nil {
 		m.log.Printf("[ERROR] Failed to start job %d: %s\n",
 			j.ID,
 			err.Error())
 		return // Really? Just bail? No! FIXME
+	} else if err = db.JobStart(j); err != nil {
+		m.log.Printf("[ERROR] Cannot mark Job %d as started in database: %s\n",
+			j.ID,
+			err.Error())
+		return
 	}
 
 	m.pool.Put(db)
