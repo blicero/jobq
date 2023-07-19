@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 02. 2021 by Benjamin Walkenhorst
 // (c) 2021 Benjamin Walkenhorst
-// Time-stamp: <2023-07-10 21:49:37 krylon>
+// Time-stamp: <2023-07-19 10:41:20 krylon>
 
 //go:build ignore
 // +build ignore
@@ -58,7 +58,7 @@ var orderedSteps = []string{
 	"build",
 }
 
-var candidates = map[string][]string{
+var tasks = map[string][]string{
 	"generate": {
 		"common",
 		"logdomain",
@@ -67,7 +67,6 @@ var candidates = map[string][]string{
 	},
 	"test": {
 		"job",
-		"queue",
 		"database",
 		"monitor",
 	},
@@ -75,7 +74,6 @@ var candidates = map[string][]string{
 		"common",
 		"logdomain",
 		"job",
-		"queue",
 		"database",
 		"database/query",
 		"monitor",
@@ -85,7 +83,6 @@ var candidates = map[string][]string{
 		"common",
 		"logdomain",
 		"job",
-		"queue",
 		"database",
 		"database/query",
 		"monitor",
@@ -278,7 +275,7 @@ This flag is not case-sensitive.`, strings.Join(orderedSteps, ", ")))
 
 // nolint: gocyclo
 func dispatch(op string, workers int) error {
-	if l := len(candidates[op]); l < workers {
+	if l := len(tasks[op]); l < workers {
 		workers = l
 	}
 
@@ -313,12 +310,12 @@ func dispatch(op string, workers int) error {
 LOOP:
 	for {
 		select {
-		case pkgq <- candidates[op][idx]:
+		case pkgq <- tasks[op][idx]:
 			dbg.Printf("[TRACE] Package #%d (%s) has been dispatched.\n",
 				idx+1,
-				candidates[op][idx])
+				tasks[op][idx])
 			idx++
-			if idx >= len(candidates[op]) {
+			if idx >= len(tasks[op]) {
 				break LOOP
 			}
 
