@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 17. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-10 18:12:43 krylon>
+// Time-stamp: <2023-07-19 11:43:34 krylon>
 
 // Package logdomain provides symbolic constants for the various parts of
 // the application that log messages.
@@ -17,7 +17,6 @@ type ID uint8
 const (
 	Common ID = iota
 	Job
-	Queue
 	Database
 	DBPool
 	Monitor
@@ -28,7 +27,6 @@ func AllDomains() []ID {
 	return []ID{
 		Common,
 		Job,
-		Queue,
 		Database,
 		DBPool,
 		Monitor,
