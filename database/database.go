@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-11 21:20:41 krylon>
+// Time-stamp: <2023-07-31 23:43:45 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -379,7 +379,7 @@ func (db *Database) JobStart(j *job.Job) error {
 	var stamp = time.Now()
 
 EXEC_QUERY:
-	if _, err = stmt.Exec(stamp.Unix(), j.SpoolOut, j.SpoolErr, j.ID); err != nil {
+	if _, err = stmt.Exec(stamp.Unix(), j.PID, j.SpoolOut, j.SpoolErr, j.ID); err != nil {
 		if worthARetry(err) {
 			waitForRetry()
 			goto EXEC_QUERY
@@ -615,15 +615,20 @@ EXEC_QUERY:
 	for rows.Next() {
 		var (
 			submit, start int64
+			pid           *int64
 			cmd           string
 			jerr, jout    *string
 			j             = &job.Job{}
 		)
 
-		if err = rows.Scan(&submit, &start, &cmd, &jout, &jerr); err != nil {
+		if err = rows.Scan(&submit, &start, &cmd, &pid, &jout, &jerr); err != nil {
 			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
 				err.Error())
 			return nil, err
+		}
+
+		if pid != nil {
+			j.PID = *pid
 		}
 
 		if jout != nil {
@@ -648,6 +653,83 @@ EXEC_QUERY:
 
 	return jobs, nil
 } // func (db *Database) JobGetRunning() ([]*job.Job, error)
+
+// JobGetUnfinished returns a slice of jobs that are currently running or
+// enqueued to be run.
+func (db *Database) JobGetUnfinished() ([]*job.Job, error) {
+	const qid query.ID = query.JobGetRunning
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return nil, err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var rows *sql.Rows
+
+EXEC_QUERY:
+	if rows, err = stmt.Query(); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to query database for running Jobs: %s\n",
+			err.Error())
+		return nil, err
+	}
+
+	defer rows.Close() // nolint: errcheck
+	var jobs = make([]*job.Job, 0)
+
+	for rows.Next() {
+		var (
+			submit, start int64
+			pid           *int64
+			cmd           string
+			jerr, jout    *string
+			j             = &job.Job{}
+		)
+
+		if err = rows.Scan(&submit, &start, &cmd, &pid, &jout, &jerr); err != nil {
+			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
+				err.Error())
+			return nil, err
+		}
+
+		if pid != nil {
+			j.PID = *pid
+		}
+
+		if jout != nil {
+			j.SpoolOut = *jout
+		}
+		if jerr != nil {
+			j.SpoolErr = *jerr
+		}
+
+		j.TimeSubmitted = time.Unix(submit, 0)
+		j.TimeStarted = time.Unix(start, 0)
+
+		if err = json.Unmarshal([]byte(cmd), &j.Cmd); err != nil {
+			db.log.Printf("[ERROR] Cannot parse JSON into Cmd: %s\nRaw: %s\n",
+				err.Error(),
+				cmd)
+			return nil, err
+		}
+
+		jobs = append(jobs, j)
+	}
+
+	return jobs, nil
+}
 
 // JobGetFinished returns the <max> most recently finished Jobs.
 // Passing -1 for max means all of them.
@@ -719,3 +801,36 @@ EXEC_QUERY:
 
 	return jobs, nil
 } // func (db *Database) JobGetFinished(max int64) ([]*job.Job, error)
+
+// JobDelete removes a Job from the database.
+func (db *Database) JobDelete(j *job.Job) error {
+	const qid query.ID = query.JobDelete
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+EXEC_QUERY:
+	if _, err = stmt.Exec(j.ID); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to delete Job %d from database: %s\n",
+			j.ID,
+			err.Error())
+		return err
+	}
+
+	return nil
+} // func (db *Database) JobDelete(j *job.Job) error

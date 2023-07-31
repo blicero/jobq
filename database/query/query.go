@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-03 18:17:07 krylon>
+// Time-stamp: <2023-07-31 22:01:56 krylon>
 
 // Package query provides symbolic constants for the database operations
 // we want to perform.
@@ -20,5 +20,7 @@ const (
 	JobGetByID
 	JobGetPending
 	JobGetRunning
+	JobGetUnfinished
 	JobGetFinished
+	JobDelete
 )

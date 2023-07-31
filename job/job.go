@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 18. 06. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-11 18:16:17 krylon>
+// Time-stamp: <2023-07-31 19:40:44 krylon>
 
 // Package job provides the Job type.
 package job
@@ -17,6 +17,8 @@ import (
 	"os/exec"
 	"strings"
 	"time"
+
+	"github.com/blicero/jobq/job/status"
 )
 
 // Error is an error type to represent errors related to the lifecycle
@@ -99,6 +101,7 @@ type Job struct {
 	Cmd           []string
 	SpoolOut      string
 	SpoolErr      string
+	PID           int64
 	proc          *exec.Cmd
 }
 
@@ -187,6 +190,7 @@ func (j *Job) Start(outpath, errpath string) error {
 	}
 
 	j.TimeStarted = time.Now()
+	j.PID = int64(j.proc.Process.Pid)
 
 	return nil
 } // func (j *Job) Start() error
@@ -221,3 +225,15 @@ func (j *Job) ProcState() *os.ProcessState {
 
 	return j.proc.ProcessState
 } // func (j *Job) ProcState() *os.ProcessState
+
+func (j *Job) Status() status.Status {
+	if j.TimeSubmitted.IsZero() {
+		return status.Created
+	} else if j.TimeStarted.IsZero() {
+		return status.Enqueued
+	} else if j.TimeEnded.IsZero() {
+		return status.Started
+	}
+
+	return status.Finished
+} // func (j *Job) Status() status.Status

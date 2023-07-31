@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-12 20:06:32 krylon>
+// Time-stamp: <2023-07-20 16:34:59 krylon>
 
 package database
 
@@ -17,6 +17,7 @@ CREATE TABLE job (
     cmd         TEXT NOT NULL,
     spoolout    TEXT UNIQUE,
     spoolerr    TEXT UNIQUE,
+    pid         INTEGER,
     CHECK (ended IS NULL OR (started IS NOT NULL AND started <= ended)),
     CHECK (ended IS NULL OR exitcode IS NOT NULL)
 ) STRICT
