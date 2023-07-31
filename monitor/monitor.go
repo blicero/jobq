@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-17 21:31:25 krylon>
+// Time-stamp: <2023-07-31 22:01:36 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -209,6 +209,52 @@ func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
 			res = m.makeResponse(str)
 			go m.jobTick()
 		}
+	case request.JobCancel:
+		var response = "Job cancellation is not implemented, yet."
+		res = m.makeResponse(response)
+		// var (
+		// 	j   *job.Job
+		// 	jid int64
+		// )
+
+		// if jid, err = strconv.ParseInt(req[1], 10, 64); err != nil {
+		// 	str = fmt.Sprintf("Cannot parse Job ID %q: %s",
+		// 		req[1],
+		// 		err.Error())
+		// 	m.log.Printf("[ERROR] %s\n", str)
+		// 	res = m.makeResponse(str)
+		// } else if j, err = db.JobGetByID(jid); err != nil {
+		// 	str = fmt.Sprintf("Error looking up Job %d: %s",
+		// 		jid,
+		// 		err.Error())
+		// 	m.log.Printf("[ERROR] %s\n", str)
+		// 	res = m.makeResponse(str)
+		// } else if j == nil {
+		// 	str = fmt.Sprintf("Did not find Job %d in database",
+		// 		jid)
+		// 	m.log.Printf("[ERROR] %s\n", str)
+		// 	res = m.makeResponse(str)
+		// }
+
+		// // We can safely ignore status.Created, because a Job that is not
+		// // "in the system" yet can simply be discarded.
+		// switch j.Status() {
+		// case status.Enqueued:
+		// 	if err = db.JobDelete(j); err != nil {
+		// 		m.log.Printf("[ERROR] Cannot delete Job %d: %s\n",
+		// 			j.ID,
+		// 			err.Error())
+		// 	}
+		// 	// delete
+		// case status.Started:
+		// 	// kill process, delete spool files, delete job
+		// case status.Finished:
+		// 	// delete spool files, delete job
+		// }
+	case request.JobQueryStatus:
+		// This one is going to be more elaborate.
+		// Damn.
+		// List pending and running jobs.
 	default:
 		str = fmt.Sprintf("I don't know how to handle %s", cmd)
 		m.log.Printf("[INFO] %s\n", str)
