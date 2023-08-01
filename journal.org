@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-07-31 23:43:06 krylon>
+# Time-stamp: <2023-08-01 23:29:41 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -17,21 +17,21 @@
   NEEDED A NAME TO GET STARTED. I HOPE I'LL FIND A BETTER NAME EVENTUALLY.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-07-31 Mo 23:43]
+   #+CAPTION: Clock summary at [2023-08-01 Di 23:29]
    | Headline                 | Time      |         |          |         |
    |--------------------------+-----------+---------+----------+---------|
-   | *Total time*             | *2d 8:02* |         |          |         |
+   | *Total time*             | *2d 9:06* |         |          |         |
    |--------------------------+-----------+---------+----------+---------|
-   | jobq                     | 2d 8:02   |         |          |         |
+   | jobq                     | 2d 9:06   |         |          |         |
    | \_  Features [0/6]       |           |    0:29 |          |         |
    | \_    Enqueue jobs [0/2] |           |         |     0:09 |         |
    | \_      Scheduling       |           |         |          |    0:09 |
-   | \_  Components [0/1]     |           | 2d 7:33 |          |         |
-   | \_    Database [0/0]     |           |         |    13:53 |         |
-   | \_    Data types [0/2]   |           |         | 1d 17:40 |         |
+   | \_  Components [0/1]     |           | 2d 8:37 |          |         |
+   | \_    Database [0/0]     |           |         |    14:05 |         |
+   | \_    Data types [3/3]   |           |         | 1d 18:32 |         |
    | \_      Job              |           |         |          |    5:13 |
-   | \_      Queue [0/1]      |           |         |          |   10:41 |
-   | \_      Monitor [0/0]    |           |         |          | 1d 1:46 |
+   | \_      Queue [1/1]      |           |         |          |   10:41 |
+   | \_      Monitor [0/0]    |           |         |          | 1d 2:38 |
    #+END:
 ** Journal
    Here I write mainly chronologically.
@@ -78,7 +78,7 @@
      seems desirable as well.
 ***** quartz https://github.com/reugn/go-quartz
 ***** cdule https://github.com/deepaksinghvi/cdule
-      Uses a database for persistence (optinally sqlite in-memory), which
+      Uses a database for persistence (optionally sqlite in-memory), which
       sounds nice.
 ***** tasks https://github.com/madflojo/tasks
       Sounds more like a cron-like scheduler, but I'll put it on my list.
@@ -145,6 +145,7 @@
     :VISIBILITY: children
     :END:
     :LOGBOOK:
+    CLOCK: [2023-08-01 Di 20:52]--[2023-08-01 Di 21:04] =>  0:12
     CLOCK: [2023-07-31 Mo 19:10]--[2023-07-31 Mo 19:37] =>  0:27
     CLOCK: [2023-07-06 Do 20:23]--[2023-07-06 Do 22:17] =>  1:54
     CLOCK: [2023-07-05 Mi 19:39]--[2023-07-05 Mi 20:28] =>  0:49
@@ -166,12 +167,13 @@
     [2023-07-03 Mo 18:12] Nah, GoSQL wasn't my cup of tea either. I'll just go
     with my usual approach, maybe I can find a way to make it a little bit
     more elegant.    
-*** Data types [0/2]
+*** Data types [3/3]
     :PROPERTIES:
     :COOKIE_DATA: todo recursive
     :VISIBILITY: children
     :END:
-**** TODO Job
+**** DONE Job
+     CLOSED: [2023-08-01 Di 20:51]
      :LOGBOOK:
      CLOCK: [2023-06-18 So 21:35]--[2023-06-18 So 22:40] =>  1:05
      CLOCK: [2023-06-18 So 16:29]--[2023-06-18 So 20:37] =>  4:08
@@ -182,7 +184,8 @@
      It would be nice if I could support pipelines, like a shell script. I
      could go cheap and just make it a shell script and then run the shell,
      but ... it doesn't feel right, does it?
-**** TODO Queue [0/1]
+**** CANCELLED Queue [1/1]
+     CLOSED: [2023-08-01 Di 20:51]
      :PROPERTIES:
      :COOKIE_DATA: todo recursive
      :VISIBILITY: children
@@ -204,7 +207,8 @@
      the /Job/ Queue the rest of the program interfaces with uses that data
      structure but adds some functionality. It's unfortunate, perhaps, that
      both the basic data structure and the Job monitor are called "queue". 
-***** TODO Persistence                                              :feature:
+***** CANCELLED Persistence                                         :feature:
+      CLOSED: [2023-08-01 Di 20:51]
       It would be nice if I could persist the queue to disk in some way, so I
       can recover it after a crash and e.g. still associate spool files with a
       Job.
@@ -226,6 +230,8 @@
      :VISIBILITY: children
      :END:
      :LOGBOOK:
+     CLOCK: [2023-08-01 Di 21:26]--[2023-08-01 Di 21:59] =>  0:33
+     CLOCK: [2023-08-01 Di 21:04]--[2023-08-01 Di 21:23] =>  0:19
      CLOCK: [2023-07-31 Mo 19:37]--[2023-07-31 Mo 23:43] =>  4:06
      CLOCK: [2023-07-20 Do 16:28]--[2023-07-20 Do 17:22] =>  0:54
      CLOCK: [2023-07-17 Mo 20:17]--[2023-07-17 Mo 21:57] =>  1:40
