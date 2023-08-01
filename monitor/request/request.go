@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 10. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-10 19:40:03 krylon>
+// Time-stamp: <2023-08-01 22:39:28 krylon>
 
 package request
 
@@ -18,6 +18,7 @@ const (
 	Invalid ID = iota
 	JobSubmit
 	JobCancel
+	JobClear
 	JobQueryStatus
 	QueueQueryStatus
 	MonitorStop
@@ -32,6 +33,8 @@ func Parse(s string) (ID, error) {
 		id = JobSubmit
 	case "JobCancel":
 		id = JobCancel
+	case "JobClear":
+		id = JobClear
 	case "JobQueryStatus":
 		id = JobQueryStatus
 	case "QueueQueryStatus":

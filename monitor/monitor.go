@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-31 22:01:36 krylon>
+// Time-stamp: <2023-08-01 22:41:21 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -212,49 +212,21 @@ func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
 	case request.JobCancel:
 		var response = "Job cancellation is not implemented, yet."
 		res = m.makeResponse(response)
-		// var (
-		// 	j   *job.Job
-		// 	jid int64
-		// )
-
-		// if jid, err = strconv.ParseInt(req[1], 10, 64); err != nil {
-		// 	str = fmt.Sprintf("Cannot parse Job ID %q: %s",
-		// 		req[1],
-		// 		err.Error())
-		// 	m.log.Printf("[ERROR] %s\n", str)
-		// 	res = m.makeResponse(str)
-		// } else if j, err = db.JobGetByID(jid); err != nil {
-		// 	str = fmt.Sprintf("Error looking up Job %d: %s",
-		// 		jid,
-		// 		err.Error())
-		// 	m.log.Printf("[ERROR] %s\n", str)
-		// 	res = m.makeResponse(str)
-		// } else if j == nil {
-		// 	str = fmt.Sprintf("Did not find Job %d in database",
-		// 		jid)
-		// 	m.log.Printf("[ERROR] %s\n", str)
-		// 	res = m.makeResponse(str)
-		// }
-
-		// // We can safely ignore status.Created, because a Job that is not
-		// // "in the system" yet can simply be discarded.
-		// switch j.Status() {
-		// case status.Enqueued:
-		// 	if err = db.JobDelete(j); err != nil {
-		// 		m.log.Printf("[ERROR] Cannot delete Job %d: %s\n",
-		// 			j.ID,
-		// 			err.Error())
-		// 	}
-		// 	// delete
-		// case status.Started:
-		// 	// kill process, delete spool files, delete job
-		// case status.Finished:
-		// 	// delete spool files, delete job
-		// }
+		// FIXME: I already wrote most of the code, but I commented it
+		// out and moved it to the end of the file for readibility.
+	case request.JobClear:
+		// remove all finished jobs the database.
 	case request.JobQueryStatus:
-		// This one is going to be more elaborate.
-		// Damn.
-		// List pending and running jobs.
+		var jobs []job.Job
+		if jobs, err = db.JobGetAll(); err != nil {
+			str = fmt.Sprintf("Failed to query all Jobs: %s",
+				err.Error())
+			m.log.Printf("[ERROR] %s\n", str)
+			res = m.makeResponse(str)
+		} else {
+			res = m.makeResponse("OK")
+			res.Jobs = jobs
+		}
 	default:
 		str = fmt.Sprintf("I don't know how to handle %s", cmd)
 		m.log.Printf("[INFO] %s\n", str)
@@ -309,8 +281,8 @@ func (m *Monitor) jobStep() {
 	var (
 		err              error
 		db               *database.Database
-		jobs             []*job.Job
-		j                *job.Job
+		jobs             []job.Job
+		j                job.Job
 		outpath, errpath string
 		outbase, errbase string
 	)
@@ -355,7 +327,7 @@ func (m *Monitor) jobStep() {
 			j.ID,
 			err.Error())
 		return // Really? Just bail? No! FIXME
-	} else if err = db.JobStart(j); err != nil {
+	} else if err = db.JobStart(&j); err != nil {
 		m.log.Printf("[ERROR] Cannot mark Job %d as started in database: %s\n",
 			j.ID,
 			err.Error())
@@ -374,9 +346,52 @@ func (m *Monitor) jobStep() {
 
 	db = m.pool.Get()
 
-	if err = db.JobFinish(j); err != nil {
+	if err = db.JobFinish(&j); err != nil {
 		m.log.Printf("[ERROR] Failed to mark Job %d as finished: %s\n",
 			j.ID,
 			err.Error())
 	}
 } // func (m *Monitor) jobStep() error
+
+//////////////////////////////////////////////////////////////////
+// HANDLING JOB CANCELLATION /////////////////////////////////////
+//////////////////////////////////////////////////////////////////
+// var (
+// 	j   *job.Job
+// 	jid int64
+// )
+
+// if jid, err = strconv.ParseInt(req[1], 10, 64); err != nil {
+// 	str = fmt.Sprintf("Cannot parse Job ID %q: %s",
+// 		req[1],
+// 		err.Error())
+// 	m.log.Printf("[ERROR] %s\n", str)
+// 	res = m.makeResponse(str)
+// } else if j, err = db.JobGetByID(jid); err != nil {
+// 	str = fmt.Sprintf("Error looking up Job %d: %s",
+// 		jid,
+// 		err.Error())
+// 	m.log.Printf("[ERROR] %s\n", str)
+// 	res = m.makeResponse(str)
+// } else if j == nil {
+// 	str = fmt.Sprintf("Did not find Job %d in database",
+// 		jid)
+// 	m.log.Printf("[ERROR] %s\n", str)
+// 	res = m.makeResponse(str)
+// }
+
+// // We can safely ignore status.Created, because a Job that is not
+// // "in the system" yet can simply be discarded.
+// switch j.Status() {
+// case status.Enqueued:
+// 	if err = db.JobDelete(j); err != nil {
+// 		m.log.Printf("[ERROR] Cannot delete Job %d: %s\n",
+// 			j.ID,
+// 			err.Error())
+// 	}
+// 	// delete
+// case status.Started:
+// 	// kill process, delete spool files, delete job
+// case status.Finished:
+// 	// delete spool files, delete job
+// }
