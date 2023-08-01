@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 03. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-31 22:38:38 krylon>
+// Time-stamp: <2023-08-01 21:00:38 krylon>
 
 package database
 
@@ -59,7 +59,8 @@ SELECT
 	cmd,
         pid,
 	spoolout,
-        spoolerr
+        spoolerr,
+        pid
 FROM job
 WHERE ended IS NULL
 ORDER BY submitted

@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-31 23:43:45 krylon>
+// Time-stamp: <2023-08-01 21:02:17 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -698,7 +698,7 @@ EXEC_QUERY:
 			j             = &job.Job{}
 		)
 
-		if err = rows.Scan(&submit, &start, &cmd, &pid, &jout, &jerr); err != nil {
+		if err = rows.Scan(&submit, &start, &cmd, &jout, &jerr, &pid); err != nil {
 			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
 				err.Error())
 			return nil, err
@@ -729,7 +729,7 @@ EXEC_QUERY:
 	}
 
 	return jobs, nil
-}
+} // func (db *Database) JobGetUnfinished() ([]*job.Job, error)
 
 // JobGetFinished returns the <max> most recently finished Jobs.
 // Passing -1 for max means all of them.
@@ -768,18 +768,19 @@ EXEC_QUERY:
 
 	for rows.Next() {
 		var (
-			submit, start int64
-			cmd           string
-			jout, jerr    *string
-			j             = &job.Job{}
+			submit, start, end, exitcode int64
+			cmd                          string
+			jout, jerr                   *string
+			j                            = &job.Job{}
 		)
 
-		if err = rows.Scan(&submit, &start, &cmd, &jout, &jerr); err != nil {
+		if err = rows.Scan(&j.ID, &submit, &start, &end, &exitcode, &cmd, &jout, &jerr); err != nil {
 			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
 				err.Error())
 			return nil, err
 		}
 
+		j.ExitCode = int(exitcode)
 		j.TimeSubmitted = time.Unix(submit, 0)
 		j.TimeStarted = time.Unix(start, 0)
 		if jout != nil {
