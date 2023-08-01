@@ -79,5 +79,19 @@ WHERE ended IS NOT NULL
 ORDER BY ended DESC
 LIMIT ?
 `,
+	query.JobGetAll: `
+SELECT
+	id,
+	submitted,
+	started,
+	ended,
+	exitcode,
+	cmd,
+	spoolout,
+	spoolerr,
+	pid
+FROM job
+ORDER BY submitted
+`,
 	query.JobDelete: "DELETE FROM job WHERE id = ?",
 }

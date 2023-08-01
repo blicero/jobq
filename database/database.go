@@ -802,6 +802,91 @@ EXEC_QUERY:
 	return jobs, nil
 } // func (db *Database) JobGetFinished(max int64) ([]*job.Job, error)
 
+// JobGetAll loads *all* Jobs from the database, regardless of age or status.
+// Beware that this might be a lot.
+func (db *Database) JobGetAll() ([]*job.Job, error) {
+	const qid query.ID = query.JobGetAll
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return nil, err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var rows *sql.Rows
+
+EXEC_QUERY:
+	if rows, err = stmt.Query(); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to query database for running Jobs: %s\n",
+			err.Error())
+		return nil, err
+	}
+
+	defer rows.Close() // nolint: errcheck
+	var jobs = make([]*job.Job, 0)
+
+	for rows.Next() {
+		var (
+			submit, start, end, exitcode int64
+			pid                          *int64
+			cmd                          string
+			jout, jerr                   *string
+			j                            = &job.Job{}
+		)
+
+		if err = rows.Scan(
+			&j.ID,
+			&submit,
+			&start,
+			&end,
+			&exitcode,
+			&cmd,
+			&jout,
+			&jerr,
+			&pid); err != nil {
+			db.log.Printf("[ERROR] Cannot extract values from cursor: %s\n",
+				err.Error())
+			return nil, err
+		}
+
+		j.ExitCode = int(exitcode)
+		j.TimeSubmitted = time.Unix(submit, 0)
+		j.TimeStarted = time.Unix(start, 0)
+		if jout != nil {
+			j.SpoolOut = *jout
+		}
+		if jerr != nil {
+			j.SpoolErr = *jerr
+		}
+		if pid != nil {
+			j.PID = *pid
+		}
+
+		if err = json.Unmarshal([]byte(cmd), &j.Cmd); err != nil {
+			db.log.Printf("[ERROR] Cannot parse JSON into Cmd: %s\nRaw: %s\n",
+				err.Error(),
+				cmd)
+			return nil, err
+		}
+
+		jobs = append(jobs, j)
+	}
+
+	return jobs, nil
+} // func (db *Database) JobGetAll() ([]*job.Job, error)
+
 // JobDelete removes a Job from the database.
 func (db *Database) JobDelete(j *job.Job) error {
 	const qid query.ID = query.JobDelete
