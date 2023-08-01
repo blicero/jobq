@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 05. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-07-06 20:45:27 krylon>
+// Time-stamp: <2023-08-01 21:32:11 krylon>
 
 package database
 
@@ -86,7 +86,7 @@ func TestJobGetPending(t *testing.T) {
 
 	var (
 		err  error
-		jobs []*job.Job
+		jobs []job.Job
 	)
 
 	if jobs, err = db.JobGetPending(-1); err != nil {

@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-08-01 21:02:17 krylon>
+// Time-stamp: <2023-08-01 21:33:50 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -512,7 +512,7 @@ EXEC_QUERY:
 } // func (db *Database) JobGetByID(id int64) (*job.Job, error)
 
 // JobGetPending returns up to <max> Jobs that have been submitted but not yet started.
-func (db *Database) JobGetPending(max int64) ([]*job.Job, error) {
+func (db *Database) JobGetPending(max int64) ([]job.Job, error) {
 	const qid query.ID = query.JobGetPending
 	var (
 		err  error
@@ -543,14 +543,14 @@ EXEC_QUERY:
 	}
 
 	defer rows.Close() // nolint: errcheck
-	var jobs = make([]*job.Job, 0)
+	var jobs = make([]job.Job, 0)
 
 	for rows.Next() {
 		var (
 			submit     int64
 			cmd        string
 			jout, jerr *string
-			j          = &job.Job{}
+			j          job.Job
 		)
 
 		if err = rows.Scan(&j.ID, &submit, &cmd, &jout, &jerr); err != nil {
@@ -576,10 +576,10 @@ EXEC_QUERY:
 	}
 
 	return jobs, nil
-} // func (db *Database) JobGetPending(max int64) ([]*job.Job, error)
+} // func (db *Database) JobGetPending(max int64) ([]job.Job, error)
 
 // JobGetRunning returns the list of Jobs (possibly empty) that are currently being executed.
-func (db *Database) JobGetRunning() ([]*job.Job, error) {
+func (db *Database) JobGetRunning() ([]job.Job, error) {
 	const qid query.ID = query.JobGetRunning
 	var (
 		err  error
@@ -610,7 +610,7 @@ EXEC_QUERY:
 	}
 
 	defer rows.Close() // nolint: errcheck
-	var jobs = make([]*job.Job, 0)
+	var jobs = make([]job.Job, 0)
 
 	for rows.Next() {
 		var (
@@ -618,7 +618,7 @@ EXEC_QUERY:
 			pid           *int64
 			cmd           string
 			jerr, jout    *string
-			j             = &job.Job{}
+			j             job.Job
 		)
 
 		if err = rows.Scan(&submit, &start, &cmd, &pid, &jout, &jerr); err != nil {
@@ -652,11 +652,11 @@ EXEC_QUERY:
 	}
 
 	return jobs, nil
-} // func (db *Database) JobGetRunning() ([]*job.Job, error)
+} // func (db *Database) JobGetRunning() ([]job.Job, error)
 
 // JobGetUnfinished returns a slice of jobs that are currently running or
 // enqueued to be run.
-func (db *Database) JobGetUnfinished() ([]*job.Job, error) {
+func (db *Database) JobGetUnfinished() ([]job.Job, error) {
 	const qid query.ID = query.JobGetRunning
 	var (
 		err  error
@@ -687,7 +687,7 @@ EXEC_QUERY:
 	}
 
 	defer rows.Close() // nolint: errcheck
-	var jobs = make([]*job.Job, 0)
+	var jobs = make([]job.Job, 0)
 
 	for rows.Next() {
 		var (
@@ -695,7 +695,7 @@ EXEC_QUERY:
 			pid           *int64
 			cmd           string
 			jerr, jout    *string
-			j             = &job.Job{}
+			j             job.Job
 		)
 
 		if err = rows.Scan(&submit, &start, &cmd, &jout, &jerr, &pid); err != nil {
@@ -805,7 +805,7 @@ EXEC_QUERY:
 
 // JobGetAll loads *all* Jobs from the database, regardless of age or status.
 // Beware that this might be a lot.
-func (db *Database) JobGetAll() ([]*job.Job, error) {
+func (db *Database) JobGetAll() ([]job.Job, error) {
 	const qid query.ID = query.JobGetAll
 	var (
 		err  error
@@ -836,7 +836,7 @@ EXEC_QUERY:
 	}
 
 	defer rows.Close() // nolint: errcheck
-	var jobs = make([]*job.Job, 0)
+	var jobs = make([]job.Job, 0)
 
 	for rows.Next() {
 		var (
@@ -844,7 +844,7 @@ EXEC_QUERY:
 			pid                          *int64
 			cmd                          string
 			jout, jerr                   *string
-			j                            = &job.Job{}
+			j                            job.Job
 		)
 
 		if err = rows.Scan(
@@ -886,7 +886,7 @@ EXEC_QUERY:
 	}
 
 	return jobs, nil
-} // func (db *Database) JobGetAll() ([]*job.Job, error)
+} // func (db *Database) JobGetAll() ([]job.Job, error)
 
 // JobDelete removes a Job from the database.
 func (db *Database) JobDelete(j *job.Job) error {
