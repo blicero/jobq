@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-08-01 23:29:41 krylon>
+# Time-stamp: <2023-08-02 20:01:15 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -17,21 +17,21 @@
   NEEDED A NAME TO GET STARTED. I HOPE I'LL FIND A BETTER NAME EVENTUALLY.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-08-01 Di 23:29]
-   | Headline                 | Time      |         |          |         |
-   |--------------------------+-----------+---------+----------+---------|
-   | *Total time*             | *2d 9:06* |         |          |         |
-   |--------------------------+-----------+---------+----------+---------|
-   | jobq                     | 2d 9:06   |         |          |         |
-   | \_  Features [0/6]       |           |    0:29 |          |         |
-   | \_    Enqueue jobs [0/2] |           |         |     0:09 |         |
-   | \_      Scheduling       |           |         |          |    0:09 |
-   | \_  Components [0/1]     |           | 2d 8:37 |          |         |
-   | \_    Database [0/0]     |           |         |    14:05 |         |
-   | \_    Data types [3/3]   |           |         | 1d 18:32 |         |
-   | \_      Job              |           |         |          |    5:13 |
-   | \_      Queue [1/1]      |           |         |          |   10:41 |
-   | \_      Monitor [0/0]    |           |         |          | 1d 2:38 |
+   #+CAPTION: Clock summary at [2023-08-02 Mi 20:01]
+   | Headline                 | Time       |          |         |       |
+   |--------------------------+------------+----------+---------+-------|
+   | *Total time*             | *2d 12:57* |          |         |       |
+   |--------------------------+------------+----------+---------+-------|
+   | jobq                     | 2d 12:57   |          |         |       |
+   | \_  Features [0/6]       |            |     0:29 |         |       |
+   | \_    Enqueue jobs [0/2] |            |          |    0:09 |       |
+   | \_      Scheduling       |            |          |         |  0:09 |
+   | \_  Components [0/1]     |            | 2d 12:28 |         |       |
+   | \_    Database [0/0]     |            |          |   14:05 |       |
+   | \_    Data types [3/3]   |            |          |   15:54 |       |
+   | \_      Job              |            |          |         |  5:13 |
+   | \_      Queue [1/1]      |            |          |         | 10:41 |
+   | \_    Monitor [0/0]      |            |          | 1d 6:29 |       |
    #+END:
 ** Journal
    Here I write mainly chronologically.
@@ -224,12 +224,13 @@
       information about finished or failed jobs.
       So here we go. Instead of an in-memory queue, I can just put everything
       in a database and have that be my queue.
-**** Monitor [0/0]
+*** Monitor [0/0]
      :PROPERTIES:
      :COOKIE_DATA: todo recursive
      :VISIBILITY: children
      :END:
      :LOGBOOK:
+     CLOCK: [2023-08-02 Mi 16:10]--[2023-08-02 Mi 20:01] =>  3:51
      CLOCK: [2023-08-01 Di 21:26]--[2023-08-01 Di 21:59] =>  0:33
      CLOCK: [2023-08-01 Di 21:04]--[2023-08-01 Di 21:23] =>  0:19
      CLOCK: [2023-07-31 Mo 19:37]--[2023-07-31 Mo 23:43] =>  4:06
@@ -247,7 +248,7 @@
      :END:
      Now we are getting somewhere.
      The Monitor listens on a Unix domain socket and runs queued jobs.
-***** Message
+**** Message
       The Message payload is a string, so it'll be easier to add more "verbs"
       later on.
       But I should think about what "verbs" I want to use.
