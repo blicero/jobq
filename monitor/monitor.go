@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-08-01 22:41:21 krylon>
+// Time-stamp: <2023-08-02 18:12:10 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -216,7 +216,7 @@ func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
 		// out and moved it to the end of the file for readibility.
 	case request.JobClear:
 		// remove all finished jobs the database.
-	case request.JobQueryStatus:
+	case request.QueueQueryStatus:
 		var jobs []job.Job
 		if jobs, err = db.JobGetAll(); err != nil {
 			str = fmt.Sprintf("Failed to query all Jobs: %s",

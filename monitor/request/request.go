@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 10. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-08-01 22:39:28 krylon>
+// Time-stamp: <2023-08-02 18:07:38 krylon>
 
 package request
 
@@ -19,7 +19,6 @@ const (
 	JobSubmit
 	JobCancel
 	JobClear
-	JobQueryStatus
 	QueueQueryStatus
 	MonitorStop
 	MonitorRestart // ???
@@ -35,8 +34,6 @@ func Parse(s string) (ID, error) {
 		id = JobCancel
 	case "JobClear":
 		id = JobClear
-	case "JobQueryStatus":
-		id = JobQueryStatus
 	case "QueueQueryStatus":
 		id = QueueQueryStatus
 	case "MonitorStop":
