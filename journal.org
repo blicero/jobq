@@ -1,5 +1,5 @@
 # -*- mode: org; fill-column: 78; -*-
-# Time-stamp: <2023-08-02 20:01:15 krylon>
+# Time-stamp: <2023-08-04 18:23:56 krylon>
 #
 #+TAGS: optimize(o) refactor(r) bug(b) feature(f) architecture(a)
 #+TAGS: web(w) database(d) javascript(j) ui(u)
@@ -17,21 +17,21 @@
   NEEDED A NAME TO GET STARTED. I HOPE I'LL FIND A BETTER NAME EVENTUALLY.
 ** Clocktable
    #+BEGIN: clocktable :scope file :maxlevel 20
-   #+CAPTION: Clock summary at [2023-08-02 Mi 20:01]
-   | Headline                 | Time       |          |         |       |
-   |--------------------------+------------+----------+---------+-------|
-   | *Total time*             | *2d 12:57* |          |         |       |
-   |--------------------------+------------+----------+---------+-------|
-   | jobq                     | 2d 12:57   |          |         |       |
-   | \_  Features [0/6]       |            |     0:29 |         |       |
-   | \_    Enqueue jobs [0/2] |            |          |    0:09 |       |
-   | \_      Scheduling       |            |          |         |  0:09 |
-   | \_  Components [0/1]     |            | 2d 12:28 |         |       |
-   | \_    Database [0/0]     |            |          |   14:05 |       |
-   | \_    Data types [3/3]   |            |          |   15:54 |       |
-   | \_      Job              |            |          |         |  5:13 |
-   | \_      Queue [1/1]      |            |          |         | 10:41 |
-   | \_    Monitor [0/0]      |            |          | 1d 6:29 |       |
+   #+CAPTION: Clock summary at [2023-08-04 Fr 18:23]
+   | Headline                 | Time       |          |          |       |
+   |--------------------------+------------+----------+----------+-------|
+   | *Total time*             | *2d 17:19* |          |          |       |
+   |--------------------------+------------+----------+----------+-------|
+   | jobq                     | 2d 17:19   |          |          |       |
+   | \_  Features [0/6]       |            |     0:29 |          |       |
+   | \_    Enqueue jobs [0/2] |            |          |     0:09 |       |
+   | \_      Scheduling       |            |          |          |  0:09 |
+   | \_  Components [0/1]     |            | 2d 16:50 |          |       |
+   | \_    Database [0/0]     |            |          |    14:05 |       |
+   | \_    Data types [3/3]   |            |          |    15:54 |       |
+   | \_      Job              |            |          |          |  5:13 |
+   | \_      Queue [1/1]      |            |          |          | 10:41 |
+   | \_    Monitor [0/0]      |            |          | 1d 10:51 |       |
    #+END:
 ** Journal
    Here I write mainly chronologically.
@@ -230,6 +230,7 @@
      :VISIBILITY: children
      :END:
      :LOGBOOK:
+     CLOCK: [2023-08-03 Do 16:01]--[2023-08-03 Do 20:23] =>  4:22
      CLOCK: [2023-08-02 Mi 16:10]--[2023-08-02 Mi 20:01] =>  3:51
      CLOCK: [2023-08-01 Di 21:26]--[2023-08-01 Di 21:59] =>  0:33
      CLOCK: [2023-08-01 Di 21:04]--[2023-08-01 Di 21:23] =>  0:19
