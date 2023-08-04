@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-08-02 18:12:10 krylon>
+// Time-stamp: <2023-08-03 19:40:57 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -13,6 +13,7 @@ import (
 	"io"
 	"log"
 	"net"
+	"os"
 	"path/filepath"
 	"strings"
 	"sync/atomic"
@@ -216,6 +217,43 @@ func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
 		// out and moved it to the end of the file for readibility.
 	case request.JobClear:
 		// remove all finished jobs the database.
+		// m( I cannot just delete the finished jobs, I need to get
+		// them from the database to get the names of the spool files,
+		// delete those, THEN I can delete the jobs from the database.
+		var jobs []job.Job
+
+		if jobs, err = db.JobGetFinished(-1); err != nil {
+			str = fmt.Sprintf("Error loading finished Jobs from database: %s",
+				err.Error())
+			m.log.Printf("[ERROR] %s\n",
+				err.Error())
+			res = m.makeResponse(str)
+		}
+
+		for _, j := range jobs {
+			if err = os.Remove(j.SpoolOut); err != nil {
+				str = fmt.Sprintf("Cannot delete spool file %q: %s",
+					j.SpoolOut,
+					err.Error())
+				m.log.Printf("[ERROR] %s\n",
+					err.Error())
+				res = m.makeResponse(str)
+			} else if err = os.Remove(j.SpoolErr); err != nil {
+				str = fmt.Sprintf("Cannot delete spool file %q: %s",
+					j.SpoolOut,
+					err.Error())
+				m.log.Printf("[ERROR] %s\n",
+					err.Error())
+				res = m.makeResponse(str)
+			} else if err = db.JobDelete(&j); err != nil {
+				str = fmt.Sprintf("Failed to remove Job %d from database: %s",
+					j.ID,
+					err.Error())
+				m.log.Printf("[ERROR] %s\n",
+					err.Error())
+				res = m.makeResponse(str)
+			}
+		}
 	case request.QueueQueryStatus:
 		var jobs []job.Job
 		if jobs, err = db.JobGetAll(); err != nil {
