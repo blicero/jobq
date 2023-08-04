@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 01. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-08-01 21:33:50 krylon>
+// Time-stamp: <2023-08-03 17:52:19 krylon>
 
 // Package database provides the persistence layer for jobs.
 // It is a wrapper around an SQLite database, exposing the operations required
@@ -733,7 +733,7 @@ EXEC_QUERY:
 
 // JobGetFinished returns the <max> most recently finished Jobs.
 // Passing -1 for max means all of them.
-func (db *Database) JobGetFinished(max int64) ([]*job.Job, error) {
+func (db *Database) JobGetFinished(max int64) ([]job.Job, error) {
 	const qid query.ID = query.JobGetFinished
 	var (
 		err  error
@@ -764,14 +764,14 @@ EXEC_QUERY:
 	}
 
 	defer rows.Close() // nolint: errcheck
-	var jobs = make([]*job.Job, 0)
+	var jobs = make([]job.Job, 0)
 
 	for rows.Next() {
 		var (
 			submit, start, end, exitcode int64
 			cmd                          string
 			jout, jerr                   *string
-			j                            = &job.Job{}
+			j                            job.Job
 		)
 
 		if err = rows.Scan(&j.ID, &submit, &start, &end, &exitcode, &cmd, &jout, &jerr); err != nil {
@@ -920,3 +920,45 @@ EXEC_QUERY:
 
 	return nil
 } // func (db *Database) JobDelete(j *job.Job) error
+
+// JobCleanFinished removes all finished Jobs from the database.
+func (db *Database) JobCleanFinished() (int64, error) {
+	const qid query.ID = query.JobCleanFinished
+	var (
+		err  error
+		stmt *sql.Stmt
+	)
+
+	if stmt, err = db.getQuery(qid); err != nil {
+		db.log.Printf("[ERROR] Cannot prepare query %s: %s\n",
+			qid,
+			err.Error())
+		return 0, err
+	} else if db.tx != nil {
+		stmt = db.tx.Stmt(stmt)
+	}
+
+	var res sql.Result
+
+EXEC_QUERY:
+	if res, err = stmt.Exec(); err != nil {
+		if worthARetry(err) {
+			waitForRetry()
+			goto EXEC_QUERY
+		}
+
+		db.log.Printf("[ERROR] Failed to delete finished Jobs from database: %s\n",
+			err.Error())
+		return 0, err
+	}
+
+	var cnt int64
+
+	if cnt, err = res.RowsAffected(); err != nil {
+		db.log.Printf("[ERROR] Cannot query number of rows deleted: %s\n",
+			err.Error())
+		return 0, err
+	}
+
+	return cnt, nil
+} // func (db *Database) JobCleanFinished() (int64, error)

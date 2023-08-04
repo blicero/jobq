@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 03. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-08-01 21:00:38 krylon>
+// Time-stamp: <2023-08-03 17:52:54 krylon>
 
 package database
 
@@ -94,5 +94,6 @@ SELECT
 FROM job
 ORDER BY submitted
 `,
-	query.JobDelete: "DELETE FROM job WHERE id = ?",
+	query.JobDelete:        "DELETE FROM job WHERE id = ?",
+	query.JobCleanFinished: "DELETE FROM job WHERE ended IS NOT NULL",
 }
