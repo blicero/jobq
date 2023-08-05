@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-08-03 19:40:57 krylon>
+// Time-stamp: <2023-08-05 23:21:47 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -57,7 +57,7 @@ func Create(name, sock string, slots int) (*Monitor, error) {
 		}
 		addr = net.UnixAddr{
 			Name: sock,
-			Net:  "unixgram",
+			Net:  common.NetName,
 		}
 	)
 
@@ -238,6 +238,7 @@ func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
 				m.log.Printf("[ERROR] %s\n",
 					err.Error())
 				res = m.makeResponse(str)
+				break
 			} else if err = os.Remove(j.SpoolErr); err != nil {
 				str = fmt.Sprintf("Cannot delete spool file %q: %s",
 					j.SpoolOut,
@@ -245,6 +246,7 @@ func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
 				m.log.Printf("[ERROR] %s\n",
 					err.Error())
 				res = m.makeResponse(str)
+				break
 			} else if err = db.JobDelete(&j); err != nil {
 				str = fmt.Sprintf("Failed to remove Job %d from database: %s",
 					j.ID,
@@ -252,7 +254,14 @@ func (m *Monitor) handleMessage(msg Message, conn *net.UnixConn) error {
 				m.log.Printf("[ERROR] %s\n",
 					err.Error())
 				res = m.makeResponse(str)
+				break
 			}
+		}
+
+		if err == nil {
+			str = fmt.Sprintf("Removed %d finished Jobs from database",
+				len(jobs))
+			res = m.makeResponse(str)
 		}
 	case request.QueueQueryStatus:
 		var jobs []job.Job
