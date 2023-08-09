@@ -2,7 +2,7 @@
 // -*- mode: go; coding: utf-8; -*-
 // Created on 06. 07. 2023 by Benjamin Walkenhorst
 // (c) 2023 Benjamin Walkenhorst
-// Time-stamp: <2023-08-05 23:21:47 krylon>
+// Time-stamp: <2023-08-09 18:05:17 krylon>
 
 // Package monitor is the nexus of the batch system.
 package monitor
@@ -137,7 +137,7 @@ func (m *Monitor) handleClient(client *net.UnixConn) {
 		err         error
 		msg         Message
 		cnt, errcnt int
-		buffer      = make([]byte, 65536)
+		buffer      = make([]byte, common.BufferSize)
 	)
 
 	defer client.Close() // nolint: errcheck

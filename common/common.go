@@ -2,7 +2,7 @@
 // -*- coding: utf-8; mode: go; -*-
 // Created on 23. 12. 2015 by Benjamin Walkenhorst
 // (c) 2015 Benjamin Walkenhorst
-// Time-stamp: <2023-08-04 19:59:09 krylon>
+// Time-stamp: <2023-08-09 18:05:05 krylon>
 
 // Package common provides constants, variables and functions used
 // throughout the application.
@@ -47,6 +47,7 @@ const (
 	RCTimeout                = time.Millisecond * 10
 	Interval                 = time.Second * 120
 	NetName                  = "unixpacket"
+	BufferSize               = 65536 // 64 KiB
 )
 
 // LogLevels are the names of the log levels supported by the logger.
